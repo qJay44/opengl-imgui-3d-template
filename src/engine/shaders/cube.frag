@@ -34,7 +34,10 @@ vec3 directionalLight() {
 }
 
 void main() {
-  vec3 col = texture(u_debug0Tex, texCoord + u_time * 0.1f).rgb;
+  vec2 offset = vec2(0.f);
+  offset.y = -u_time * 0.1f;
+
+  vec3 col = texture(u_debug0Tex, texCoord + offset).rgb;
   col *= directionalLight();
 	FragColor = vec4(col, 1.f);
 }

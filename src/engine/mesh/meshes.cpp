@@ -87,13 +87,13 @@ Mesh plane(size_t resolution, GLenum mode, vec3 up) {
       switch (mode) {
         case GL_TRIANGLES: {
           if (x != resolution - 1 && y != resolution - 1) {
-            indices[triIndex + 0] = idx + resolution;     // 2       0 -------- 1
-            indices[triIndex + 1] = idx;                  // 0       |          |
-            indices[triIndex + 2] = idx + 1;              // 1       |          |
-            //                                                       |          |
-            indices[triIndex + 3] = idx + 1;              // 1       |          |
-            indices[triIndex + 4] = idx + resolution + 1; // 3       |          |
-            indices[triIndex + 5] = idx + resolution;     // 2       2 -------- 3
+            indices[triIndex + 0] = idx + resolution + 1;  // 2       2 -------- 1
+            indices[triIndex + 1] = idx + 1;               // 0       |          |
+            indices[triIndex + 2] = idx;                   // 1       |          |
+            //                                                   CCW  |          |
+            indices[triIndex + 3] = idx;                   // 1       |          |
+            indices[triIndex + 4] = idx + resolution;      // 3       |          |
+            indices[triIndex + 5] = idx + resolution + 1;  // 2       3 -------- 0
 
             triIndex += 6;
           }
@@ -101,10 +101,10 @@ Mesh plane(size_t resolution, GLenum mode, vec3 up) {
         }
         case GL_PATCHES: {
           if (x != resolution - 1 && y != resolution - 1) {
-            indices[triIndex + 0] = idx;                  // 0
+            indices[triIndex + 0] = idx + resolution + 1; // 0
             indices[triIndex + 1] = idx + 1;              // 1
-            indices[triIndex + 2] = idx + resolution + 1; // 3
-            indices[triIndex + 3] = idx + resolution;     // 2
+            indices[triIndex + 2] = idx;                  // 2
+            indices[triIndex + 3] = idx + resolution;     // 3
 
             triIndex += 4;
           }
