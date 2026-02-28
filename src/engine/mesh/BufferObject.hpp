@@ -19,17 +19,17 @@ public:
   BufferObject& operator=(const BufferObject&) = delete;
 
   BufferObject(BufferObject&& other) {
+    std::swap(id, other.id);
     target = other.target;
-    id = other.id;
-    other.id = 0;
   }
 
   BufferObject& operator=(BufferObject&& other) {
     if (this != &other) {
-      clear();
+      if (target && target != other.target)
+        error("[BufferObject] The new target [{}] is different from current [{}]", other.target, target);
+
+      std::swap(id, other.id);
       target = other.target;
-      id = other.id;
-      other.id = 0;
     }
 
     return *this;
@@ -85,7 +85,7 @@ public:
 private:
   static constexpr GLsizei size = 1;
 
-  GLenum target;
+  GLenum target = 0;
   GLuint id = 0;
 };
 

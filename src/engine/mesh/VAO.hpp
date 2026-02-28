@@ -21,20 +21,15 @@ struct VAO {
   VAO& operator=(const VAO&) = delete;
 
   VAO(VAO&& other) {
-    id = other.id;
-    other.id = 0;
+    std::swap(id, other.id);
   }
 
   VAO& operator=(VAO&& other) {
-    if (this != &other) {
-      clear();
-      id = other.id;
-      other.id = 0;
-    }
+    if (this != &other)
+      std::swap(id, other.id);
 
     return *this;
   }
-
 
   void gen() {
     glGenVertexArrays(size, &id);
