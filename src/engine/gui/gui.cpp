@@ -62,7 +62,7 @@ void gui::draw() {
 
   // ===== Spectate camera =============================================================================== //
 
-  if (!camPtr) error("The spectate camera is not linked to gui");
+  assert(camPtr);
   if (CollapsingHeader("Spectate camera")) {
     SliderFloat("Near##2", &camPtr->nearPlane, 0.01f, 1.f);
     SliderFloat("Far##2", &camPtr->farPlane,  10.f, 1000.f);
@@ -83,7 +83,7 @@ void gui::draw() {
 
   // ===== Light ========================================================================================= //
 
-  if (!lightPtr) error("The light is not linked to gui");
+  assert(lightPtr);
   if (CollapsingHeader("Light")) {
     DragFloat3("Position", glm::value_ptr(lightPtr->position));
     DragFloat("Radius", &lightPtr->radius, 1.f, 0.f);
