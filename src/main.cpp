@@ -1,3 +1,4 @@
+#include <cstdlib>
 #ifdef _WIN32
   #include <direct.h>
   #define CHDIR(p) _chdir(p);
@@ -30,18 +31,26 @@ void GLAPIENTRY MessageCallback(
   static const clrp::clrp_t clrpWarning{clrp::ATTRIBUTE::BOLD, clrp::FG::YELLOW};
 
   clrp::clrp_t clrpFinal = clrpError;
+  bool stop = true;
 
   switch (source) {
     case GL_DEBUG_SOURCE_SHADER_COMPILER:
       return; // Handled by the Shader class itself
-    case GL_DEBUG_SOURCE_API:
-      clrpFinal = clrpWarning; // "SIMD32 shader inefficient", skipping since occurs only on my laptop
+  }
+
+  // Suppress annoying SIMD32 callback
+  if (type == GL_DEBUG_TYPE_PERFORMANCE) {
+    clrpFinal = clrpWarning;
+    stop = false;
   }
 
   fprintf(
     stderr, "GL CALLBACK: %s source = 0x%x, id = 0x%x type = 0x%x, severity = 0x%x, message = %s\n",
     (type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : ""), source, id, type, severity, clrp::format(message, clrpFinal).c_str()
   );
+
+  if (stop)
+    exit(EXIT_FAILURE);
 }
 
 int main() {
