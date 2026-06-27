@@ -98,6 +98,7 @@ struct BufferObject {
 
   void clear() {
     if (id) glDeleteBuffers(size, &id);
+    size = 0;
     id = 0;
   }
 };

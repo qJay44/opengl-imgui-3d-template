@@ -47,6 +47,7 @@ struct VAO {
 
   void clear() {
     if (id) glDeleteVertexArrays(size, &id);
+    size = 0;
     id = 0;
   }
 

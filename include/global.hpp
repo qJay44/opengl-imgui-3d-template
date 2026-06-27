@@ -15,8 +15,7 @@ extern float dt;
 extern float time;
 
 extern bool guiFocused;
-extern bool drawWireframe;
-extern bool drawNormals;
+extern bool wireframeMode;
 extern bool drawGlobalAxis;
 
 inline ivec2 getWinSize() {

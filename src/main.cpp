@@ -164,10 +164,10 @@ int main() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glEnable(GL_CULL_FACE);  // Disable for plane meshes, enable for volumetric meshes
     glEnable(GL_DEPTH_TEST); // Disable to ignore depth (draw one object over another one without discarding the farthest)
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE + !global::wireframeMode); // Always use GL_FILL for fullscreen quads
 
     Texture2D::getDebugTex0().bind(0);
     cube.draw(&cameraSpectate, cubeShader);
-    Texture2D::getDebugTex0().unbind();
 
     glDisable(GL_CULL_FACE);
 

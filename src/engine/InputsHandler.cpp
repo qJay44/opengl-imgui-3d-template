@@ -8,6 +8,11 @@ using global::window;
 dvec2 InputsHandler::mousePos;
 
 void InputsHandler::keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
+  if (global::guiFocused) {
+    gui::keyCallback(window, key, scancode, action, mods);
+    return;
+  }
+
   switch (key) {
     case GLFW_KEY_R:
       if (action == GLFW_PRESS) {
@@ -28,20 +33,13 @@ void InputsHandler::keyCallback(GLFWwindow* window, int key, int scancode, int a
       break;
     case GLFW_KEY_1:
       if (action == GLFW_PRESS && !global::guiFocused)
-        global::drawWireframe = !global::drawWireframe;
+        global::wireframeMode = !global::wireframeMode;
       break;
     case GLFW_KEY_2:
       if (action == GLFW_PRESS && !global::guiFocused)
         global::drawGlobalAxis = !global::drawGlobalAxis;
       break;
-    case GLFW_KEY_3:
-      if (action == GLFW_PRESS && !global::guiFocused)
-        global::drawNormals = !global::drawNormals;
-      break;
   }
-
-  if (global::guiFocused)
-    gui::keyCallback(window, key, scancode, action, mods);
 }
 
 void InputsHandler::scrollCallback(GLFWwindow* window, double xoffset, double yoffset) {
