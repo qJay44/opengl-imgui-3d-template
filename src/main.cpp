@@ -11,7 +11,6 @@
 #include "engine/Camera.hpp"
 #include "engine/Shader.hpp"
 #include "engine/InputsHandler.hpp"
-#include "engine/mesh/meshes.hpp"
 #include "engine/Light.hpp"
 #include "engine/texture/Texture2D.hpp"
 #include "utils/clrp.hpp"
@@ -85,10 +84,9 @@ int main() {
 
   // ===== Shaders ============================================== //
 
-  Shader::setDirectoryLocation("src/engine/shaders");
+  Shader::setDirectoryLocation("res/shaders");
 
   Shader lightShader("light.vert", "light.frag");
-  Shader linesShader("lines.vert", "lines.frag");
   Shader cubeShader("cube.vert", "cube.frag");
 
   // ===== Cameras ============================================== //
@@ -108,12 +106,9 @@ int main() {
 
   Light light({0.f, 30.f, 0.f});
 
-  Mesh cube = Mesh::loadObj("res/obj/Cube.obj");
+  auto cube = MeshElements::loadFromOBJ("res/obj/Cube.obj");
   cube.translate(vec3(50.f));
   cube.scale(10.f);
-
-  Mesh axis = meshes::axis();
-  axis.scale(1e4f);
 
   glCullFace(GL_BACK);
   glFrontFace(GL_CCW);
@@ -158,19 +153,22 @@ int main() {
 
     glClearColor(0.f, 0.f, 0.f, 1.f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glEnable(GL_CULL_FACE); // Disable for plane meshes, enable for volumetric meshes
+    glEnable(GL_CULL_FACE);  // Disable for plane meshes, enable for volumetric meshes
     glEnable(GL_DEPTH_TEST); // Disable to ignore depth (draw one object over another one without discarding the farthest)
 
-    Texture2D::getDebug0Tex().bind();
+    Texture2D::getDebugTex0().bind(0);
     cube.draw(&cameraSpectate, cubeShader);
-    Texture2D::getDebug0Tex().unbind();
+    Texture2D::getDebugTex0().unbind();
 
     glDisable(GL_CULL_FACE);
 
     light.draw(&cameraSpectate, lightShader);
 
-    if (global::drawGlobalAxis)
-      axis.draw(&cameraSpectate, linesShader);
+    if (global::drawGlobalAxis) {
+      Mesh::drawDebugDirectionLine(&cameraSpectate, {}, {1e6f, 0.f, 0.f}, global::red);
+      Mesh::drawDebugDirectionLine(&cameraSpectate, {}, {0.f, 1e6f, 0.f}, global::green);
+      Mesh::drawDebugDirectionLine(&cameraSpectate, {}, {0.f, 0.f, 1e6f}, global::blue);
+    }
 
     // ============================================================ //
 
