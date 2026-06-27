@@ -11,6 +11,7 @@ project(MyProject VERSION 1.0)
 
 find_package(glfw3 REQUIRED)
 find_package(TIFF REQUIRED)
+find_package(Freetype REQUIRED)
 
 # ===== GLAD ====================================================== #
 
@@ -40,6 +41,10 @@ target_include_directories(ImGui_GLFW_OpenGL PUBLIC
 file(GLOB_RECURSE UTILS_SOURCES ${UTILS_PATH}/src/*.cpp)
 add_library(Utils STATIC ${UTILS_SOURCES})
 
+# Remove TIFF from sources
+# list(REMOVE_ITEM UTILS_SOURCES ${UTILS_PATH}/src/loadTif.cpp)
+# list(REMOVE_ITEM UTILS_SOURCES ${UTILS_PATH}/src/saveTif.cpp)
+
 target_include_directories(Utils PUBLIC ${UTILS_PATH}/include)
 
 # ===== Main ====================================================== #
@@ -60,5 +65,5 @@ target_include_directories(${PROJECT_NAME} PRIVATE
   ${PROJECT_SOURCE_DIR}/include
 )
 
-target_link_libraries(${PROJECT_NAME} PRIVATE glfw TIFF::TIFF GLAD ImGui_GLFW_OpenGL Utils)
+target_link_libraries(${PROJECT_NAME} PRIVATE glfw TIFF::TIFF GLAD ImGui_GLFW_OpenGL Utils Freetype::Freetype)
 

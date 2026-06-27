@@ -190,6 +190,6 @@ int main() {
   gui::shutdown();
   glfwTerminate();
 
-  return 0;
+  return EXIT_SUCCESS;
 }
 
