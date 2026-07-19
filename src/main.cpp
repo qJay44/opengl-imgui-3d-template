@@ -66,7 +66,6 @@ int main() {
 
   // Window init
   window = glfwCreateWindow(1600, 900, "MyProgram", NULL, NULL);
-  global::profiler = new ProfilerManager(300);
   ivec2 winSize = global::getWinSize();
   dvec2 winCenter = dvec2(winSize) / 2.;
 
@@ -126,6 +125,7 @@ int main() {
   gui::lightPtr = &light;
 
   global::drawGlobalAxis = true;
+  ProfilerManager::Query queryCube{"Cube draw"};
 
   // Render loop
   while (!glfwWindowShouldClose(window)) {
@@ -155,7 +155,7 @@ int main() {
       titleTimer = currTime;
     }
 
-    global::profiler->clearTasks();
+    global::profiler.clearTasks();
 
     light.update();
     light.setUniforms(cubeShader);
@@ -167,7 +167,10 @@ int main() {
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE + !global::wireframeMode); // Always use GL_FILL for fullscreen quads
 
     Texture2D::getDebugTex0().bind(0);
+
+    auto _taskCube = global::profiler.startScopedTaskGpu(queryCube);
     cube.draw(&cameraSpectate, cubeShader);
+    _taskCube.end();
 
     glDisable(GL_CULL_FACE);
 

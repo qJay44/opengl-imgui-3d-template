@@ -8,23 +8,24 @@ using global::window;
 dvec2 InputsHandler::mousePos;
 
 void InputsHandler::keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
+  if (key == GLFW_KEY_R) {
+    if (action == GLFW_PRESS) {
+      global::guiFocused = !global::guiFocused;
+      glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL + 2 * !global::guiFocused);
+
+      // Prevent moving camera towards cursor after disabling it
+      dvec2 winCenter = global::getWinCenter();
+      if (!global::guiFocused)
+        glfwSetCursorPos(window, winCenter.x, winCenter.y);
+    }
+  }
+
   if (global::guiFocused) {
     gui::keyCallback(window, key, scancode, action, mods);
     return;
   }
 
   switch (key) {
-    case GLFW_KEY_R:
-      if (action == GLFW_PRESS) {
-        global::guiFocused = !global::guiFocused;
-        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL + 2 * !global::guiFocused);
-
-        // Prevent moving camera towards cursor after disabling it
-        dvec2 winCenter = global::getWinCenter();
-        if (!global::guiFocused)
-          glfwSetCursorPos(window, winCenter.x, winCenter.y);
-      }
-      break;
     case GLFW_KEY_E:
       if (action == GLFW_PRESS) gui::toggleConfig();
       break;
