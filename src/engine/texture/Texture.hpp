@@ -1,7 +1,5 @@
 #pragma once
 
-#include "TextureDescriptor.hpp"
-
 class Texture {
 public:
   Texture(Texture&& other);
@@ -10,7 +8,7 @@ public:
   Texture(const Texture&) = delete;
   Texture& operator=(const Texture&) = delete;
 
-  virtual ~Texture() = 0;
+  ~Texture();
 
   void bind(GLuint unit) const;
   void unbind() const;
@@ -22,11 +20,10 @@ public:
   ivec2 getSize(GLint mipLevel) const;
 
 protected:
-  TextureDescriptor desc{};
+  GLenum target = 0;
   GLuint id = 0;
 
 protected:
   Texture() = default;
-  Texture(const TextureDescriptor& desc);
 };
 

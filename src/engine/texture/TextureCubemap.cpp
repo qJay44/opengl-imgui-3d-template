@@ -1,13 +1,11 @@
 #include "TextureCubemap.hpp"
 
-TextureCubemap TextureCubemap::loadFromImage(const fspath& path, const TextureDescriptor& desc) {
-  return loadFromImage(image2D(path), desc);
+void TextureCubemap::loadFromImage(const fspath& path, const TextureDescriptor& desc) {
+  loadFromImage(image2D(path), desc);
 }
 
-TextureCubemap TextureCubemap::loadFromImage(const image2D& img, const TextureDescriptor& desc) {
-  TextureCubemap tex;
-
-  tex.onInit(desc);
+void TextureCubemap::loadFromImage(const image2D& img, const TextureDescriptor& desc) {
+  onInit(desc);
 
   //     +Y
   //  -X +Z +X -Z
@@ -27,17 +25,16 @@ TextureCubemap TextureCubemap::loadFromImage(const image2D& img, const TextureDe
   glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
   glPixelStorei(GL_UNPACK_SKIP_PIXELS, 0);
   glPixelStorei(GL_UNPACK_SKIP_ROWS, 0);
-  tex.unbind();
-
-  return tex;
+  unbind();
 }
 
 void TextureCubemap::onInit(const TextureDescriptor& desc) {
-  this->desc = desc;
-
   if (desc.target != GL_TEXTURE_CUBE_MAP)
     error("[TextureCubemap::TextureCubemap] Wrong target ({:#x})", desc.target);
 
+  target = desc.target;
+
+  clear();
   glGenTextures(1, &id);
   bind(0);
   glTexParameteri(desc.target, GL_TEXTURE_MIN_FILTER, desc.minFilter);
