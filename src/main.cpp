@@ -1,3 +1,4 @@
+#include "engine/ShadersWatcher.hpp"
 #include <cstdlib>
 #ifdef _WIN32
   #include <direct.h>
@@ -93,9 +94,13 @@ int main() {
   // ===== Shaders ============================================== //
 
   Shader::setDirectoryLocation("res/shaders");
+  ShadersWatcher shadersWatcher{};
 
   Shader lightShader("light.vert", "light.frag");
   Shader cubeShader("cube.vert", "cube.frag");
+
+  shadersWatcher.add(&lightShader);
+  shadersWatcher.add(&cubeShader);
 
   // ===== Cameras ============================================== //
 
@@ -129,6 +134,9 @@ int main() {
 
   // Render loop
   while (!glfwWindowShouldClose(window)) {
+
+    // ----- Meta updates ------------------------------------------------------------------------------------------------------------ //
+
     static double titleTimer = glfwGetTime();
     static double prevTime = titleTimer;
     static double currTime = prevTime;
@@ -155,14 +163,20 @@ int main() {
       titleTimer = currTime;
     }
 
+    // ----- Updates ----------------------------------------------------------------------------------------------------------------- //
+
     global::profiler.clearTasks();
+
+    shadersWatcher.check();
 
     light.update();
     light.setUniforms(cubeShader);
 
+    // ----- Draw -------------------------------------------------------------------------------------------------------------------- //
+
     glClearColor(0.f, 0.f, 0.f, 1.f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glEnable(GL_CULL_FACE);  // Disable for plane meshes, enable for volumetric meshes
+    glEnable(GL_CULL_FACE);  // Disable for flat meshes, enable for volumetric meshes
     glEnable(GL_DEPTH_TEST); // Disable to ignore depth (draw one object over another one without discarding the farthest)
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE + !global::wireframeMode); // Always use GL_FILL for fullscreen quads
 
@@ -182,7 +196,7 @@ int main() {
       Mesh::drawDebugDirectionLine(&cameraSpectate, {}, {0.f, 0.f, 1e6f}, global::blue);
     }
 
-    // ============================================================ //
+    // ----- Frame end --------------------------------------------------------------------------------------------------------------- //
 
     gui::draw();
 
