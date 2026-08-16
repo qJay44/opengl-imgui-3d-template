@@ -5,11 +5,13 @@
 
 class ShadersWatcher {
 public:
-  ShadersWatcher() = default;;
-  ShadersWatcher(ShadersWatcher &&) = default;
-  ShadersWatcher(const ShadersWatcher &) = default;
-  ShadersWatcher &operator=(ShadersWatcher &&) = default;
-  ShadersWatcher &operator=(const ShadersWatcher &) = default;
+  ShadersWatcher() = default;
+
+  ShadersWatcher(ShadersWatcher&&) = default;
+  ShadersWatcher(const ShadersWatcher&) = delete;
+
+  ShadersWatcher& operator=(ShadersWatcher&&) = default;
+  ShadersWatcher& operator=(const ShadersWatcher&) = delete;
 
   void add(Shader* shader) {
     shaders.push_back(shader);

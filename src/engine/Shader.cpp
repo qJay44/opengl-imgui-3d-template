@@ -96,6 +96,7 @@ void Shader::reload() {
     error("[Shader::reload] Trying to reload uninitialized shader");
 
   glDeleteProgram(program);
+  locs.clear();
 
   program = glCreateProgram();
   GLuint shaders[5];
