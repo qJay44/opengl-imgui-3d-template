@@ -1,29 +1,23 @@
 #pragma once
 
+#include <unordered_set>
+
 #include "Shader.hpp"
-#include <vector>
 
-class ShadersWatcher {
-public:
-  ShadersWatcher() = default;
+struct ShadersWatcher {
+  ShadersWatcher() = delete;
 
-  ShadersWatcher(ShadersWatcher&&) = default;
-  ShadersWatcher(const ShadersWatcher&) = delete;
-
-  ShadersWatcher& operator=(ShadersWatcher&&) = default;
-  ShadersWatcher& operator=(const ShadersWatcher&) = delete;
-
-  void add(Shader* shader) {
-    shaders.push_back(shader);
+  static void add(Shader* shader) {
+    shaders.insert(shader);
   }
 
-  void check() {
+  static void check() {
     for (Shader* shader : shaders)
       if (shader->needsReload())
         shader->reload();
   }
 
 private:
-  std::vector<Shader*> shaders;
+  static std::unordered_set<Shader*> shaders;
 };
 

@@ -94,13 +94,12 @@ int main() {
   // ===== Shaders ============================================== //
 
   Shader::setDirectoryLocation("res/shaders");
-  ShadersWatcher shadersWatcher{};
 
   Shader lightShader("light.vert", "light.frag");
   Shader cubeShader("cube.vert", "cube.frag");
 
-  shadersWatcher.add(&lightShader);
-  shadersWatcher.add(&cubeShader);
+  ShadersWatcher::add(&lightShader);
+  ShadersWatcher::add(&cubeShader);
 
   // ===== Cameras ============================================== //
 
@@ -167,7 +166,7 @@ int main() {
 
     global::profiler.clearTasks();
 
-    shadersWatcher.check();
+    ShadersWatcher::check();
 
     light.update();
     light.setUniforms(cubeShader);

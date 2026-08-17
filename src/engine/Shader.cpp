@@ -49,11 +49,16 @@ Shader::Shader(const fspath& compPath) {
 
 Shader::Shader(Shader&& other) {
   std::swap(program, other.program);
+  std::swap(locs, other.locs);
+  std::swap(shadersMetadata, other.shadersMetadata);
 }
 
 Shader& Shader::operator=(Shader&& other) {
-  if (this != &other)
+  if (this != &other) {
     std::swap(program, other.program);
+    std::swap(locs, other.locs);
+    std::swap(shadersMetadata, other.shadersMetadata);
+  }
 
   return *this;
 }
