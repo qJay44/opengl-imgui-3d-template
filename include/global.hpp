@@ -44,6 +44,9 @@ static inline mat4 getScreenProjection() {
 }
 
 namespace json {
+  // NLOHMANN_DEFINE_TYPE_INTRUSIVE(struct_t, field1, field2, ...)     // For private structs
+  // NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(struct_t, field1, field2, ...) // For public structs
+
   void loadPreset(auto& cfg, std::string_view name) {
     fspath path = fspath("res/data/cfg") / name;
 
