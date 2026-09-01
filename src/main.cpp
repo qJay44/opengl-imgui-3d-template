@@ -1,6 +1,3 @@
-#include "engine/mesh/MeshElementsInstancing.hpp"
-#include "engine/mesh/meshes.hpp"
-#include <cstdlib>
 #ifdef _WIN32
   #include <direct.h>
   #define CHDIR(p) _chdir(p);
@@ -9,14 +6,15 @@
   #define CHDIR(p) chdir(p);
 #endif
 
-#include "global.hpp"
-#include "engine/gui/gui.hpp"
 #include "engine/Camera.hpp"
-#include "engine/Shader.hpp"
 #include "engine/InputsHandler.hpp"
 #include "engine/Light.hpp"
+#include "engine/Shader.hpp"
 #include "engine/ShadersWatcher.hpp"
+#include "engine/gui/gui.hpp"
+#include "engine/mesh/meshes.hpp"
 #include "engine/texture/Texture2D.hpp"
+#include "global.hpp"
 #include "utils/clrp.hpp"
 
 using global::window;
