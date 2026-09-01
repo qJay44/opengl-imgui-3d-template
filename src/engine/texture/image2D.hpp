@@ -18,7 +18,7 @@ struct image2D {
   image2D& operator=(image2D&& other);
 
   image2D(int width, int height);
-  image2D(fspath path, GLenum loadType = IMAGE2D_LOAD_STB, bool flipVertically = false);
+  image2D(fspath path, bool flipVertically = false, GLenum loadType = IMAGE2D_LOAD_STB);
   ~image2D();
 
   int width, height, channels;
@@ -27,7 +27,7 @@ struct image2D {
   fspath path{};
   bool flipVertically = false;
 
-  void load(fspath path, GLenum loadType = IMAGE2D_LOAD_STB, bool flipVertically = false);
+  void load(fspath path, bool flipVertically = false, GLenum loadType = IMAGE2D_LOAD_STB);
 
   void clear();
 

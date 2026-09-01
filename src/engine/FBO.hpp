@@ -6,6 +6,8 @@ struct FBO {
   GLsizei size = 0;
   GLuint id = 0;
 
+  FBO() = default;
+
   FBO(GLsizei size) {
     gen(size);
   }
@@ -33,6 +35,9 @@ struct FBO {
   }
 
   void gen(GLsizei size) {
+    if (id)
+      error("[FBO::gen] Already generated");
+
     this->size = size;
     glGenFramebuffers(size, &id);
   }

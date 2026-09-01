@@ -43,7 +43,7 @@ image2D& image2D::operator=(image2D&& other) {
 
 image2D::image2D(int width, int height) : width(width), height(height) {}
 
-image2D::image2D(fspath path, GLenum loadType, bool flipVertically) {
+image2D::image2D(fspath path, bool flipVertically, GLenum loadType) {
   load(path, loadType, flipVertically);
 }
 
@@ -51,7 +51,7 @@ image2D::~image2D() {
   clear();
 }
 
-void image2D::load(fspath path, GLenum loadType, bool flipVertically) {
+void image2D::load(fspath path, bool flipVertically, GLenum loadType) {
   clear();
 
   this->path = path;

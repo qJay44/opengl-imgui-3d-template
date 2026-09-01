@@ -1,4 +1,5 @@
-#include "engine/ShadersWatcher.hpp"
+#include "engine/mesh/MeshElementsInstancing.hpp"
+#include "engine/mesh/meshes.hpp"
 #include <cstdlib>
 #ifdef _WIN32
   #include <direct.h>
@@ -14,6 +15,7 @@
 #include "engine/Shader.hpp"
 #include "engine/InputsHandler.hpp"
 #include "engine/Light.hpp"
+#include "engine/ShadersWatcher.hpp"
 #include "engine/texture/Texture2D.hpp"
 #include "utils/clrp.hpp"
 
@@ -96,10 +98,13 @@ int main() {
   Shader::setDirectoryLocation("res/shaders");
 
   Shader lightShader("light.vert", "light.frag");
-  Shader cubeShader("cube.vert", "cube.frag");
+  Shader cubeShader("PTNC.vert", "test.frag");
+  Shader planeShader("P.vert", "test.frag");
+  ShadersWatcher shadersWatcher;
 
-  ShadersWatcher::add(&lightShader);
-  ShadersWatcher::add(&cubeShader);
+  shadersWatcher.add(&lightShader);
+  shadersWatcher.add(&cubeShader);
+  shadersWatcher.add(&planeShader);
 
   // ===== Cameras ============================================== //
 
@@ -121,6 +126,9 @@ int main() {
   auto cube = MeshElements::loadFromOBJ("res/obj/Cube.obj");
   cube.translate(vec3(50.f));
   cube.scale(10.f);
+
+  auto plane = meshes::plane(2);
+  plane.scale(10.f);
 
   glCullFace(GL_BACK);
   glFrontFace(GL_CCW);
@@ -166,10 +174,11 @@ int main() {
 
     global::profiler.clearTasks();
 
-    ShadersWatcher::check();
+    shadersWatcher.check();
 
     light.update();
     light.setUniforms(cubeShader);
+    light.setUniforms(planeShader);
 
     // ----- Draw -------------------------------------------------------------------------------------------------------------------- //
 
@@ -183,6 +192,8 @@ int main() {
 
     auto _taskCube = global::profiler.startScopedTaskGpu(queryCube);
     cube.draw(&cameraSpectate, cubeShader);
+    plane.draw(&cameraSpectate, planeShader);
+
     _taskCube.end();
 
     glDisable(GL_CULL_FACE);

@@ -1,6 +1,8 @@
 #include "MeshElementsInstancing.hpp"
 
-MeshElementsInstancing::MeshElementsInstancing(const MeshData& data) : MeshElements(data) {}
+MeshElementsInstancing::MeshElementsInstancing(const MeshData& data) : MeshElements(data) {
+  vboInstance.gen();
+}
 
 MeshElementsInstancing::MeshElementsInstancing(MeshElements&& other) {
   *this = std::move(other);
@@ -8,6 +10,9 @@ MeshElementsInstancing::MeshElementsInstancing(MeshElements&& other) {
 
 MeshElementsInstancing& MeshElementsInstancing::operator=(MeshElements&& other) {
   static_cast<MeshElements&>(*this) = std::move(other);
+  if (vboInstance.id == 0)
+    vboInstance.gen();
+
   return *this;
 }
 

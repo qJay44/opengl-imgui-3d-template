@@ -16,7 +16,9 @@ struct BufferObject {
 
   BufferObject() = default;
 
-  BufferObject(GLenum target, GLsizei size = 1) : target(target) {
+  BufferObject(GLenum target) : target(target) {}
+
+  BufferObject(GLenum target, GLsizei size) : target(target) {
     gen(size);
   }
 
@@ -47,9 +49,9 @@ struct BufferObject {
     clear();
   }
 
-  void gen(GLsizei size) {
+  void gen(GLsizei size = 1) {
     if (id)
-      error("[BufferObject::gen] Buffer is already generated");
+      error("[BufferObject::gen] Already generated");
 
     this->size = size;
     glGenBuffers(size, &id);

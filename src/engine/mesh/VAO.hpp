@@ -1,6 +1,7 @@
 #pragma once
 
 // Vertex Array Object
+#include "utils/utils.hpp"
 struct VAO {
   GLsizei size = 0;
   GLuint id = 0;
@@ -14,7 +15,9 @@ struct VAO {
     return emptyVAO;
   }
 
-  VAO(GLsizei size = 1) {
+  VAO() = default;
+
+  VAO(GLsizei size) {
     gen(size);
   }
 
@@ -37,6 +40,9 @@ struct VAO {
   }
 
   void gen(GLsizei size = 1) {
+    if (id)
+      error("[VAO::gen] Already generated");
+
     this->size = size;
     glGenVertexArrays(size, &id);
   }

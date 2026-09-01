@@ -55,7 +55,7 @@ MeshElements MeshElements::loadFromOBJ(const fspath& file, bool printInfo)  {
   const std::vector<tinyobj::shape_t>& shapes = reader.GetShapes();
   // const std::vector<tinyobj::material_t>& materials = reader.GetMaterials();
 
-  std::vector<vertex::PCTN> vertices;
+  std::vector<vertex::PTNC> vertices;
   std::vector<GLuint> indices;
   std::unordered_map<tinyobj::index_t, uint32_t, IndexHasher, IndexEqual> uniqueVertices;
 
@@ -64,7 +64,7 @@ MeshElements MeshElements::loadFromOBJ(const fspath& file, bool printInfo)  {
       auto [it, inserted] = uniqueVertices.emplace(idx, vertices.size());
 
       if (inserted) {
-        vertex::PCTN vertex;
+        vertex::PTNC vertex;
 
         vertex.position = {
           attrib.vertices[3 * idx.vertex_index + 0],
@@ -72,20 +72,20 @@ MeshElements MeshElements::loadFromOBJ(const fspath& file, bool printInfo)  {
           attrib.vertices[3 * idx.vertex_index + 2]
         };
 
+        // Check if `texcoord_index` is zero or positive. negative = no texcoord data
+        if (idx.texcoord_index >= 0) {
+          vertex.texture = {
+            attrib.texcoords[2 * idx.texcoord_index + 0],
+            attrib.texcoords[2 * idx.texcoord_index + 1]
+          };
+        }
+
         // Check if `normal_index` is zero or positive. negative = no normal data
         if (idx.normal_index >= 0) {
           vertex.normal = {
             attrib.normals[3 * idx.normal_index + 0],
             attrib.normals[3 * idx.normal_index + 1],
             attrib.normals[3 * idx.normal_index + 2]
-          };
-        }
-
-        // Check if `texcoord_index` is zero or positive. negative = no texcoord data
-        if (idx.texcoord_index >= 0) {
-          vertex.texture = {
-            attrib.texcoords[2 * idx.texcoord_index + 0],
-            attrib.texcoords[2 * idx.texcoord_index + 1]
           };
         }
 
@@ -137,6 +137,8 @@ MeshElements::MeshElements(const MeshData& data)  {
   elementCount = data.indicesSize / sizeof(data.indices[0]);
 
   vao.gen();
+  vbo.gen();
+  ebo.gen();
 
   vao.bind();
   vbo.allocate(data.vertices, data.verticesSize, data.usage);

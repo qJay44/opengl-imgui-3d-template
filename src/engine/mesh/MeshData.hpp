@@ -1,5 +1,6 @@
 #pragma once
 
+#include "utils/utils.hpp"
 #include "vertex.hpp"
 
 struct MeshData {
@@ -12,6 +13,10 @@ struct MeshData {
   GLenum mode           = GL_TRIANGLES;
 
   MeshData() = default;
+  ~MeshData() {
+    if (!vertices)
+      error("[MeshData::~MeshData] Deleting empty MeshData");
+  }
 
   template<vertex::IsVertexType T>
   MeshData(std::vector<T>& vertices)
