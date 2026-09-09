@@ -1,0 +1,1 @@
+Hold keyboard keys state (pressed:true, released:false), gets [[Registry]] from #window

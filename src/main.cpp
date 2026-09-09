@@ -1,58 +1,14 @@
-#ifdef _WIN32
-  #include <direct.h>
-  #define CHDIR(p) _chdir(p);
-#else
-  #include <unistd.h>
-  #define CHDIR(p) chdir(p);
-#endif
-
-#include "engine/Camera.hpp"
-#include "engine/InputsHandler.hpp"
-#include "engine/Light.hpp"
-#include "engine/Shader.hpp"
-#include "engine/ShadersWatcher.hpp"
-#include "engine/gui/gui.hpp"
-#include "engine/mesh/meshes.hpp"
-#include "engine/texture/Texture2D.hpp"
-#include "global.hpp"
-#include "utils/clrp.hpp"
-
-using global::window;
-
-void GLAPIENTRY MessageCallback(
-  GLenum source,
-  GLenum type,
-  GLuint id,
-  GLenum severity,
-  GLsizei length,
-  const GLchar* message,
-  const void* userParam
-) {
-  static const clrp::clrp_t clrpError{clrp::ATTRIBUTE::BOLD, clrp::FG::RED};
-  static const clrp::clrp_t clrpWarning{clrp::ATTRIBUTE::BOLD, clrp::FG::YELLOW};
-
-  clrp::clrp_t clrpFinal = clrpError;
-  bool stop = true;
-
-  switch (source) {
-    case GL_DEBUG_SOURCE_SHADER_COMPILER:
-      return; // Handled by the Shader class itself
-  }
-
-  // Suppress annoying SIMD32 callback
-  if (type == GL_DEBUG_TYPE_PERFORMANCE) {
-    clrpFinal = clrpWarning;
-    stop = false;
-  }
-
-  fprintf(
-    stderr, "GL CALLBACK: %s source = 0x%x, id = 0x%x type = 0x%x, severity = 0x%x, message = %s\n",
-    (type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : ""), source, id, type, severity, clrp::format(message, clrpFinal).c_str()
-  );
-
-  if (stop)
-    exit(EXIT_FAILURE);
-}
+#include "core/EngineContext.hpp"
+#include "ecs/Registry.hpp"
+#include "ecs/components/CameraComponent.hpp"
+#include "ecs/components/MeshComponent.hpp"
+#include "ecs/components/TransformComponent.hpp"
+#include "ecs/systems/RenderSystem.hpp"
+#include "ecs/systems/InputSystem.hpp"
+#include "ecs/systems/RenderSystem.hpp"
+#include "ecs/systems/TimeSystem.hpp"
+#include "gfx/AssetManager.hpp"
+#include "gfx/Render.hpp"
 
 int main() {
   // Assuming the executable is launching from its own directory
@@ -66,153 +22,81 @@ int main() {
   glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, true);
 
   // Window init
-  window = glfwCreateWindow(1600, 900, "MyProgram", NULL, NULL);
-  ivec2 winSize = global::getWinSize();
+  ivec2 winSize{1600, 900};
   dvec2 winCenter = dvec2(winSize) / 2.;
+  GLFWwindow* window = glfwCreateWindow(winSize.x, winSize.y, "MyProgram", NULL, NULL);
 
-  if (!window) {
-    printf("Failed to create GFLW window\n");
-    glfwTerminate();
-    return EXIT_FAILURE;
-  }
+  if (!window)
+    error("[main.cpp] Failed to create GFLW window");
+
   glfwMakeContextCurrent(window);
-  glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL + 2 * !global::guiFocused);
   glfwSetCursorPos(window, winCenter.x, winCenter.y);
 
   // GLAD init
-  if (!gladLoadGL((GLADloadfunc)glfwGetProcAddress)) {
-    printf("Failed to initialize GLAD\n");
-    return EXIT_FAILURE;
+  if (!gladLoadGL((GLADloadfunc)glfwGetProcAddress))
+    error("[main.cpp] Failed to initialize GLAD");
+
+  // ----- Pre-loop init ----------------------------------------------------------------------------------------------------------- //
+
+  core::EngineContext ctx;
+  ctx.window = window;
+
+  gfx::Renderer renderer;
+  renderer.init(&ctx);
+
+  gfx::AssetManager assetManager;
+
+  ecs::Registry registry;
+  registry.setEngineContext(&ctx);
+  registry.setRenderer(&renderer);
+  registry.setAssetManager(&assetManager);
+
+  ecs::InputSystem::init(registry);
+
+  assetManager.loadFromObj("res/obj/Cube.obj");
+  assetManager.createShader("DefaultCube", {"PTNC.vert", "test.frag"});
+  assetManager.createCamera("DefaultCamera", {});
+
+  // ----- Entities ---------------------------------------------------------------------------------------------------------------- //
+
+  ecs::Entity entCube = registry.createEntity();
+  {
+
+    MeshComponent meshComponent{
+      .mesh = assetManager.getMesh("Cube.obj"),
+      .shader = assetManager.getShader("DefaultCube")
+    };
+
+    registry.emplace(entCube, meshComponent);
   }
 
-  glViewport(0, 0, winSize.x, winSize.y);
-  glEnable(GL_DEBUG_OUTPUT);
-  glDebugMessageCallback(MessageCallback, 0);
+  ecs::Entity entCamera = registry.createEntity();
+  {
+    CameraComponent camComponent{
+      .cam = assetManager.getCamera("DefaultCamera")
+    };
 
-  gui::init();
+    TransformComponent transComponent{
+      .pos = {10.f, 10.f, 10.f},
+      .rotation = 0.f,
+      .scale = 1.f
+    };
 
-  // ===== Shaders ============================================== //
+    registry.emplace(entCamera, camComponent);
+    registry.emplace(entCamera, transComponent);
+  }
 
-  Shader::setDirectoryLocation("res/shaders");
-
-  Shader lightShader("light.vert", "light.frag");
-  Shader cubeShader("PTNC.vert", "test.frag");
-  Shader planeShader("P.vert", "test.frag");
-  ShadersWatcher shadersWatcher;
-
-  shadersWatcher.add(&lightShader);
-  shadersWatcher.add(&cubeShader);
-  shadersWatcher.add(&planeShader);
-
-  // ===== Cameras ============================================== //
-
-  Camera cameraSpectate({85.f, 77.f, 76.f}, -2.385f, -0.582f);
-  cameraSpectate.setFarPlane(1000.f);
-  cameraSpectate.setSpeedDefault(50.f);
-
-  // ===== Inputs Handler ======================================= //
-
-  InputsHandler::mousePos = global::getWinCenter();
-  glfwSetScrollCallback(window, InputsHandler::scrollCallback);
-  glfwSetKeyCallback(window, InputsHandler::keyCallback);
-  glfwSetCursorPosCallback(window, InputsHandler::cursorPosCallback);
-
-  // ============================================================ //
-
-  Light light({0.f, 30.f, 0.f});
-
-  auto cube = MeshElements::loadFromOBJ("res/obj/Cube.obj");
-  cube.translate(vec3(50.f));
-  cube.scale(10.f);
-
-  auto plane = meshes::plane(2);
-  plane.scale(10.f);
-
-  glCullFace(GL_BACK);
-  glFrontFace(GL_CCW);
-
-  gui::camPtr = &cameraSpectate;
-  gui::lightPtr = &light;
-
-  global::drawGlobalAxis = true;
-  ProfilerManager::Query queryCube{"Cube draw"};
-
-  // Render loop
   while (!glfwWindowShouldClose(window)) {
-
-    // ----- Meta updates ------------------------------------------------------------------------------------------------------------ //
-
-    static double titleTimer = glfwGetTime();
-    static double prevTime = titleTimer;
-    static double currTime = prevTime;
-
-    constexpr double fpsLimit = 1. / 90.;
-    currTime = glfwGetTime();
-    global::dt = currTime - prevTime;
-
-    // FPS cap
-    if (global::dt < fpsLimit) continue;
-    else prevTime = currTime;
-
-    global::time += global::dt;
-
-    if (glfwGetWindowAttrib(window, GLFW_FOCUSED)) {
-      InputsHandler::process(cameraSpectate);
-      cameraSpectate.update();
-    } else
-      glfwSetCursorPos(window, winCenter.x, winCenter.y);
-
-    // Update window title every 0.3 seconds
-    if (currTime - titleTimer >= 0.3) {
-      gui::fps = static_cast<u16>(1.f / global::dt);
-      titleTimer = currTime;
-    }
-
     // ----- Updates ----------------------------------------------------------------------------------------------------------------- //
 
-    global::profiler.clearTasks();
-
-    shadersWatcher.check();
-
-    light.update();
-    light.setUniforms(cubeShader);
-    light.setUniforms(planeShader);
+    ecs::TimeSystem::update(registry);
+    ecs::InputSystem::update(registry);
 
     // ----- Draw -------------------------------------------------------------------------------------------------------------------- //
 
-    glClearColor(0.f, 0.f, 0.f, 1.f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glEnable(GL_CULL_FACE);  // Disable for flat meshes, enable for volumetric meshes
-    glEnable(GL_DEPTH_TEST); // Disable to ignore depth (draw one object over another one without discarding the farthest)
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE + !global::wireframeMode); // Always use GL_FILL for fullscreen quads
-
-    Texture2D::getDebugTex0().bind(0);
-
-    auto _taskCube = global::profiler.startScopedTaskGpu(queryCube);
-    cube.draw(&cameraSpectate, cubeShader);
-    plane.draw(&cameraSpectate, planeShader);
-
-    _taskCube.end();
-
-    glDisable(GL_CULL_FACE);
-
-    light.draw(&cameraSpectate, lightShader);
-
-    if (global::drawGlobalAxis) {
-      Mesh::drawDebugDirectionLine(&cameraSpectate, {}, {1e6f, 0.f, 0.f}, global::red);
-      Mesh::drawDebugDirectionLine(&cameraSpectate, {}, {0.f, 1e6f, 0.f}, global::green);
-      Mesh::drawDebugDirectionLine(&cameraSpectate, {}, {0.f, 0.f, 1e6f}, global::blue);
-    }
-
-    // ----- Frame end --------------------------------------------------------------------------------------------------------------- //
-
-    gui::draw();
-
-    glfwSwapBuffers(window);
-    glfwPollEvents();
+    ecs::RenderSystem::render(registry);
   }
 
-  gui::shutdown();
   glfwTerminate();
 
   return EXIT_SUCCESS;

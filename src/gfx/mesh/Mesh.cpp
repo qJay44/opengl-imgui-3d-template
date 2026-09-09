@@ -1,0 +1,69 @@
+#include "Mesh.hpp"
+
+#include "draw.hpp"
+#include "utils/utils.hpp"
+#include "vertex.hpp"
+
+namespace gfx {
+
+Mesh::Mesh(const MeshData& data) {
+  assert(data.vertices);
+
+  vao.gen();
+  vbo.gen();
+
+  vao.bind();
+  vbo.allocate(data.vertices, data.verticesSize, data.usage);
+
+  vbo.bind();
+
+  linkAttributes(data.layout);
+
+  if (data.indices) {
+    ebo.gen();
+    ebo.allocate(data.indices, data.indicesSize, data.usage);
+
+    drawCmd = ArraysDraw{
+      .mode = data.mode,
+      .vertexCount = static_cast<GLsizei>(data.verticesSize / data.layout.stride),
+    };
+  } else {
+    drawCmd = ElementsDraw{
+      .mode = data.mode,
+      .indexCount = static_cast<GLsizei>(data.indicesSize / sizeof(data.indices[0])),
+      .indexType = GL_UNSIGNED_INT,
+      .indicesOffset = 0
+    };
+  }
+
+  vao.unbind();
+  vbo.unbind();
+}
+
+void Mesh::linkAttributes(const vertex::Layout& layout) {
+  size_t offset = 0;
+
+  for (size_t i = 0; i < layout.count; i++) {
+    const auto& attr = layout.attribs[i];
+    glEnableVertexAttribArray(attr.index);
+
+    size_t elementSize = 0;
+    switch (attr.type) {
+      case GL_FLOAT:
+        glVertexAttribPointer(attr.index, attr.size, attr.type, GL_FALSE, layout.stride, (void*)offset);
+        elementSize = sizeof(float);
+        break;
+      case GL_INT:
+        glVertexAttribIPointer(attr.index, attr.size, attr.type, layout.stride, (void*)offset);
+        elementSize = sizeof(int);
+        break;
+      default:
+        error("[Mesh::linkAttributes] Unexpected attribute type [{:#x}]", attr.type);
+    }
+
+    offset += attr.size * elementSize;
+  }
+}
+
+} // namespace gfx
+

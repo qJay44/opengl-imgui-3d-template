@@ -1,0 +1,185 @@
+#include "AssetManager.hpp"
+
+#include "tiny_obj_loader.h"
+#include "../gfx/mesh/vertex.hpp"
+#include "utils/clrp.hpp"
+#include "utils/utils.hpp"
+#include <memory>
+
+namespace gfx {
+
+namespace {
+
+// A custom hasher for the tinyobj index struct
+struct IndexHasher {
+  size_t operator() (const struct tinyobj::index_t& i) const {
+    size_t h = 0;
+    // Standard hash combine logic
+    auto hash_combine = [](size_t& seed, int v) {
+      seed ^= std::hash<int>{}(v) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+    };
+
+    hash_combine(h, i.vertex_index);
+    hash_combine(h, i.normal_index);
+    hash_combine(h, i.texcoord_index);
+    return h;
+  }
+};
+
+// Equality check for the map
+struct IndexEqual {
+  bool operator() (const tinyobj::index_t& a, const tinyobj::index_t& b) const {
+    return a.vertex_index == b.vertex_index &&
+           a.normal_index == b.normal_index &&
+           a.texcoord_index == b.texcoord_index;
+  }
+};
+
+} // namespace
+
+void AssetManager::loadFromObj(fspath filepath, bool printInfo) {
+  std::string filename = filepath.filename().string();
+
+  if (meshes.contains(filename)) {
+    #ifndef NDEBUG
+      warning("[AssetManager::loadFromObj] Mesh ({}) already loaded", filename);
+    #endif
+    return;
+  }
+
+  tinyobj::ObjReaderConfig readerConfig;
+  tinyobj::ObjReader reader;
+
+  if (!reader.ParseFromFile(filepath.string(), readerConfig)) {
+    std::string msg = "[AssetManager::loadFromObj] ParseFromFile error";
+    if (!reader.Error().empty())
+      msg = "TinyObjReader: " + reader.Error();
+
+    error(msg);
+  }
+
+  if (!reader.Warning().empty())
+    warning(std::format("TinyObjReader: {}", reader.Warning()));
+
+  const tinyobj::attrib_t& attrib = reader.GetAttrib();
+  const std::vector<tinyobj::shape_t>& shapes = reader.GetShapes();
+  // const std::vector<tinyobj::material_t>& materials = reader.GetMaterials();
+
+  std::vector<vertex::PCTN> vertices;
+  std::vector<GLuint> indices;
+  std::unordered_map<tinyobj::index_t, uint32_t, IndexHasher, IndexEqual> uniqueVertices;
+
+  for (const auto& shape : shapes) {
+    for (const auto& idx : shape.mesh.indices) {
+      auto [it, inserted] = uniqueVertices.emplace(idx, vertices.size());
+
+      if (inserted) {
+        vertex::PCTN vertex;
+
+        vertex.position = {
+          attrib.vertices[3 * idx.vertex_index + 0],
+          attrib.vertices[3 * idx.vertex_index + 1],
+          attrib.vertices[3 * idx.vertex_index + 2]
+        };
+
+        // Check if `normal_index` is zero or positive. negative = no normal data
+        if (idx.normal_index >= 0) {
+          vertex.normal = {
+            attrib.normals[3 * idx.normal_index + 0],
+            attrib.normals[3 * idx.normal_index + 1],
+            attrib.normals[3 * idx.normal_index + 2]
+          };
+        }
+
+        // Check if `texcoord_index` is zero or positive. negative = no texcoord data
+        if (idx.texcoord_index >= 0) {
+          vertex.texture = {
+            attrib.texcoords[2 * idx.texcoord_index + 0],
+            attrib.texcoords[2 * idx.texcoord_index + 1]
+          };
+        }
+
+        // Optional: vertex colors
+        vertex.color = {
+          attrib.colors[3 * idx.vertex_index + 0],
+          attrib.colors[3 * idx.vertex_index + 1],
+          attrib.colors[3 * idx.vertex_index + 2]
+        };
+
+        vertices.push_back(vertex);
+      }
+
+      indices.push_back(it->second);
+    }
+  }
+
+  // ============ Print info ============ //
+
+  if (printInfo) {
+    clrp::clrp_t cfmt{
+      .attr = clrp::ATTRIBUTE::BOLD,
+      .fg = clrp::FG::CYAN
+    };
+    std::string cname = clrp::format(std::format("[{}]", filepath.string()), cfmt);
+    std::string infoLoad = std::format("[load]\nvertices: {}\ncolors:   {}\ntextures: {}\nnormals:  {}", attrib.vertices.size() / 3, attrib.colors.size() / 3, attrib.texcoords.size() / 2, attrib.normals.size() / 3);
+    std::string infoFinal = std::format("[final]\nvertices: {}, indices: {}\n", vertices.size(), indices.size());
+    printf("\n==================== %s ====================\n\n%s\n\n%s\n\n", cname.c_str(), infoLoad.c_str(), infoFinal.c_str());
+
+    std::string end = "============================================";
+    for (u32 i = 0; i < filepath.string().size(); i++)
+      end += "=";
+    end += "\n";
+
+    puts(end.c_str());
+  }
+
+  // ==================================== //
+
+  meshes.emplace(filename, std::make_unique<Mesh>(Mesh(MeshData(vertices, indices))));
+}
+
+void AssetManager::createShader(const std::string& name, ShaderMetadata meta) {
+  if (shaders.contains(name)) {
+    #ifndef NDEBUG
+      warning("[AssetManager::createShader] Shader ({}) already create", name);
+    #endif
+    return;
+  }
+
+  Shader shader;
+
+  if (!meta.tescPath.empty())
+    shader = Shader(meta.vsPath, meta.fsPath, meta.tescPath, meta.tesePath, meta.gsPath);
+  else if (!meta.compPath.empty())
+    shader = Shader(meta.compPath);
+  else
+    shader = Shader(meta.vsPath, meta.fsPath, meta.gsPath);
+
+  shaders.emplace(name, std::make_unique<Shader>(std::move(shader)));
+}
+
+Mesh* AssetManager::getMesh(const std::string& name) const {
+  assert(contains(meshes, name));
+  return meshes.at(name).get();
+}
+
+Shader* AssetManager::getShader(const std::string& name) const {
+  assert(contains(shaders, name));
+  return shaders.at(name).get();
+}
+
+core::Camera* AssetManager::getCamera(const std::string& name) const {
+  assert(contains(cameras, name));
+  return cameras.at(name).get();
+}
+
+bool AssetManager::contains(const auto& map, const std::string& name) {
+  auto it = map.find(name);
+  if (it == map.end())
+    error("[AssetManager::getMesh] Didn't find ({})", name);
+
+  return true;
+}
+
+} // namespace AssetManager
+
