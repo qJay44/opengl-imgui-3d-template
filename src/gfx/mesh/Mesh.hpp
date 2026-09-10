@@ -11,6 +11,12 @@ namespace gfx {
 
 class Mesh {
 public:
+  enum PolygonMode {
+    POINT = GL_POINT,
+    LINE = GL_LINE,
+    FILL = GL_FILL,
+  };
+
   Mesh() = default;
   Mesh(const Mesh&) = delete;
   Mesh(Mesh&&) = default;
@@ -22,6 +28,7 @@ public:
   VAO vao{};
   BufferObject vbo{GL_ARRAY_BUFFER};
   BufferObject ebo{GL_ELEMENT_ARRAY_BUFFER};
+  PolygonMode polygonMode = FILL;
 
   std::variant<ArraysDraw, ElementsDraw> drawCmd;
 

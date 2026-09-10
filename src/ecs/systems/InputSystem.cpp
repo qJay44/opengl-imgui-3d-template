@@ -1,13 +1,20 @@
 #include "InputSystem.hpp"
 
 #include "utils/utils.hpp"
+#include "../../core/EngineContext.hpp"
+#include "../systems/CameraSystem.hpp"
+#include "../components/VelocityComponent.hpp"
+#include "../components/MeshComponent.hpp"
+#include <GLFW/glfw3.h>
 
 namespace ecs::InputSystem {
 
+using namespace ecs::component;
+
 namespace {
 
-Registry* getRegistryFromGLFW(GLFWwindow* window) {
-  Registry* registry = static_cast<Registry*>(glfwGetWindowUserPointer(window));
+entt::registry* getRegistryFromGLFW(GLFWwindow* window) {
+  entt::registry* registry = static_cast<entt::registry*>(glfwGetWindowUserPointer(window));
   if (!registry)
     error("[InputSystem::keyCallback] registry is nullptr");
 
@@ -15,11 +22,23 @@ Registry* getRegistryFromGLFW(GLFWwindow* window) {
 }
 
 void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
-  Registry* registry = getRegistryFromGLFW(window);
-  core::EngineContext* ctx = registry->getEngineContext();
+  entt::registry* registry = getRegistryFromGLFW(window);
+  auto& ctx = registry->ctx().get<core::EngineContext>();
 
-  if (action == GLFW_PRESS)   ctx->keyboardKeys[key] = true;
-  if (action == GLFW_RELEASE) ctx->keyboardKeys[key] = false;
+  if (action == GLFW_PRESS)   ctx.keyboardKeys[key] = true;
+  if (action == GLFW_RELEASE) ctx.keyboardKeys[key] = false;
+
+  switch (key) {
+    case GLFW_KEY_1:
+      if (action == GLFW_PRESS) {
+        auto meshView = registry->view<MeshComponent>();
+        for (auto entity : meshView) {
+          auto& meshComponent = registry->get<MeshComponent>(entity);
+          meshComponent.mesh->polygonMode = meshComponent.mesh->polygonMode == gfx::Mesh::FILL ? gfx::Mesh::LINE : gfx::Mesh::FILL;
+        }
+      }
+      break;
+  }
 
   // glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL + 2 * (key == GLFW_KEY_R));
 }
@@ -28,28 +47,57 @@ void scrollCallback(GLFWwindow* window, double xoffset, double yoffset) {
 }
 
 void cursorPosCallback(GLFWwindow* window, double xpos, double ypos) {
-  // Registry* registry = getRegistryFromGLFW(window);
-  // core::EngineContext* ctx = registry->getEngineContext();
-  // TODO: Move camera
+  entt::registry* registry = getRegistryFromGLFW(window);
+
+  CameraSystem::onMouseMove(*registry, dvec2(xpos, ypos));
 }
 
 } // namespace
 
-void init(Registry& registry) {
-  core::EngineContext* ctx = registry.getEngineContext();
+void init(entt::registry& registry) {
+  auto& ctx = registry.ctx().get<core::EngineContext>();
 
-  glfwSetKeyCallback(ctx->window, keyCallback);
-  glfwSetScrollCallback(ctx->window, scrollCallback);
-  glfwSetCursorPosCallback(ctx->window, cursorPosCallback);
+  glfwSetKeyCallback(ctx.window, keyCallback);
+  glfwSetScrollCallback(ctx.window, scrollCallback);
+  glfwSetCursorPosCallback(ctx.window, cursorPosCallback);
 
-  glfwSetWindowUserPointer(ctx->window, &registry);
+  glfwSetWindowUserPointer(ctx.window, &registry);
 }
 
-void update(Registry& registry) {
-  core::EngineContext* ctx = registry.getEngineContext();
+void update(entt::registry& registry) {
+  auto& ctx = registry.ctx().get<core::EngineContext>();
+  vec2 winCenter = ctx.getWinCenter();
 
-  if (ctx->keyboardKeys[GLFW_KEY_ESCAPE])
-    glfwSetWindowShouldClose(ctx->window, GLFW_TRUE);
+  int cursorMode = glfwGetInputMode(ctx.window, GLFW_CURSOR);
+  if (cursorMode == GLFW_CURSOR_DISABLED)
+    glfwSetCursorPos(ctx.window, winCenter.x, winCenter.y);
+
+  if (ctx.keyboardKeys[GLFW_KEY_ESCAPE])
+    glfwSetWindowShouldClose(ctx.window, GLFW_TRUE);
+
+  float forwardMask = ctx.keyboardKeys[GLFW_KEY_W];
+  float leftMask    = ctx.keyboardKeys[GLFW_KEY_A];
+  float backMask    = ctx.keyboardKeys[GLFW_KEY_S];
+  float rightMask   = ctx.keyboardKeys[GLFW_KEY_D];
+  float upMask      = ctx.keyboardKeys[GLFW_KEY_SPACE];
+  float downMask    = ctx.keyboardKeys[GLFW_KEY_LEFT_CONTROL];
+
+  auto velView = registry.view<CameraComponent, VelocityComponent>();
+  for (auto entity : velView) {
+    const auto& camComponent = registry.get<CameraComponent>(entity);
+    auto& velComponent = registry.get<VelocityComponent>(entity);
+
+    const vec3& orientation = camComponent.cam->orientation;
+    const vec3& up = camComponent.cam->up;
+    const vec3 right = glm::normalize(glm::cross(orientation, up));
+
+    velComponent.velocity +=  orientation * forwardMask;
+    velComponent.velocity += -right       * leftMask;
+    velComponent.velocity += -orientation * backMask;
+    velComponent.velocity +=  right       * rightMask;
+    velComponent.velocity +=  up          * upMask;
+    velComponent.velocity += -up          * downMask;
+  }
 }
 
 } // namespace InputSystem

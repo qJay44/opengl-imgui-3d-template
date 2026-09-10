@@ -21,7 +21,6 @@ void ScopedTaskCpu::end() {
   auto dur = end - start;
   auto durationSec = duration_cast<duration<double>>(dur).count();
 
-  assert(global::profiler);
   // global::profiler.endTaskCpu(taskIdx, durationSec);
 }
 
@@ -43,7 +42,6 @@ void ScopedTaskGpu::end() {
 
   glQueryCounter(q.q1, GL_TIMESTAMP);
 
-  assert(global::profiler);
   // global::profiler.endTaskGpu(taskIdx, q.calcDuration());
 }
 

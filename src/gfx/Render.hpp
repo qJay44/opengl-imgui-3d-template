@@ -1,17 +1,26 @@
 #pragma once
 
 #include "mesh/Mesh.hpp"
-#include "Shader.hpp"
 #include "../core/EngineContext.hpp"
 
 namespace gfx {
 
 class Renderer {
 public:
-  void init(const core::EngineContext* ctx) const;
+  Renderer() = default;
+
+  Renderer(const Renderer&) = delete;
+  Renderer(Renderer&&) = default;
+
+  Renderer& operator=(const Renderer&) = delete;
+  Renderer& operator=(Renderer&&) = default;
+
+  ~Renderer() = default;
+
+  void init(const core::EngineContext *ctx) const;
   void beginFrame() const;
-  void submit(const gfx::Mesh* mesh, const gfx::Shader* shader, const mat4& model) const;
-  void endFrame(const core::EngineContext* ctx) const;
+  void submit(const gfx::Mesh* mesh) const;
+  void endFrame(const core::EngineContext& ctx) const;
 };
 
 } // namespace gfx

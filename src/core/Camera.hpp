@@ -10,15 +10,23 @@ struct Camera {
   float nearPlane = 0.1f;
   float farPlane = 1000.f;
   float fov = glm::radians(45.f);
+  float yaw = glm::radians(-90.f);
+  float pitch = glm::radians(0.f);
+  float sensitivity = 1.f;
   vec3 up{0.f, 1.f, 0.f};
   vec3 orientation{0.f, 0.f, -1.f};
+  mat4 cachedProj{1.f};
+  mat4 cachedView{1.f};
 
-  mat4 getProjMatrix(float aspectRatio) {
-    return glm::perspective(fov, aspectRatio, nearPlane, farPlane);
-  }
+  void update(float aspectRatio, vec3 pos) {
+    orientation = normalize(vec3{
+      cos(yaw) * cos(pitch),
+      sin(pitch),
+      sin(yaw) * cos(pitch)
+    });
 
-  mat4 getViewMatrix(vec3 eye) {
-    return glm::lookAt(eye, eye + orientation, up);
+    cachedProj = glm::perspective(fov, aspectRatio, nearPlane, farPlane);
+    cachedView = glm::lookAt(pos, pos + orientation, up);
   }
 };
 

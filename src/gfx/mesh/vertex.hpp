@@ -68,23 +68,23 @@ struct PTN {
   }
 };
 
-// ----- PCTN ------------------------------------------------------------------------------ //
+// ----- PTNC ------------------------------------------------------------------------------ //
 
-struct PCTN {
+struct PTNC {
   vec3 position;
-  vec3 color;
   vec2 texture;
   vec3 normal;
+  vec3 color;
 
   static const Layout& getLayout() {
     static constexpr Attribute attribs[] = {
       {0, 3, GL_FLOAT},
-      {1, 3, GL_FLOAT},
-      {2, 2, GL_FLOAT},
+      {1, 2, GL_FLOAT},
+      {2, 3, GL_FLOAT},
       {3, 3, GL_FLOAT}
     };
 
-    static constexpr Layout layout = {attribs, 4, sizeof(PCTN)};
+    static constexpr Layout layout = {attribs, 4, sizeof(PTNC)};
 
     return layout;
   }
@@ -97,7 +97,7 @@ concept IsVertexType =
   std::is_same_v<T, P>    ||
   std::is_same_v<T, PT>   ||
   std::is_same_v<T, PTN>  ||
-  std::is_same_v<T, PCTN>;
+  std::is_same_v<T, PTNC>;
 
 } // vertex
 

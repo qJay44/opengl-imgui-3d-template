@@ -64,6 +64,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
   ${PROFILER_PATH}/include
   ${PROJECT_SOURCE_DIR}/include
   ${JSON_PATH}/include
+  ${ENTT_PATH}/src
 )
 
 target_link_libraries(${PROJECT_NAME} PRIVATE glfw TIFF::TIFF GLAD ImGui_GLFW_OpenGL Utils Freetype::Freetype)

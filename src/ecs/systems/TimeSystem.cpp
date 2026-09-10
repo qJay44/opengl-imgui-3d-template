@@ -1,13 +1,15 @@
 #include "TimeSystem.hpp"
 
+#include "../../core/EngineContext.hpp"
+
 namespace ecs::TimeSystem {
 
-void update(Registry& registry) {
+void update(entt::registry& registry) {
   static double titleTimer = glfwGetTime();
   static double prevTime = titleTimer;
   static double currTime = prevTime;
 
-  core::EngineContext& ctx = registry.getEngineContext();
+  auto& ctx = registry.ctx().get<core::EngineContext>();
 
   currTime = glfwGetTime();
   double dt = currTime - prevTime;

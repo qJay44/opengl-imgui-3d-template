@@ -17,27 +17,29 @@ Mesh::Mesh(const MeshData& data) {
 
   vbo.bind();
 
-  linkAttributes(data.layout);
-
   if (data.indices) {
     ebo.gen();
     ebo.allocate(data.indices, data.indicesSize, data.usage);
+    ebo.bind();
 
-    drawCmd = ArraysDraw{
-      .mode = data.mode,
-      .vertexCount = static_cast<GLsizei>(data.verticesSize / data.layout.stride),
-    };
-  } else {
     drawCmd = ElementsDraw{
       .mode = data.mode,
       .indexCount = static_cast<GLsizei>(data.indicesSize / sizeof(data.indices[0])),
       .indexType = GL_UNSIGNED_INT,
-      .indicesOffset = 0
+      .indicesOffset = nullptr
+    };
+  } else {
+    drawCmd = ArraysDraw{
+      .mode = data.mode,
+      .vertexCount = static_cast<GLsizei>(data.verticesSize / data.layout.stride),
     };
   }
 
+  linkAttributes(data.layout);
+
   vao.unbind();
   vbo.unbind();
+  // No need to unbind ebo here
 }
 
 void Mesh::linkAttributes(const vertex::Layout& layout) {

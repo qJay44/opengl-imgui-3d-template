@@ -1,8 +1,6 @@
 #pragma once
 
-#include "../Registry.hpp"
-
 namespace ecs::TimeSystem {
-  void update(Registry& registry);
+  void update(entt::registry& registry);
 };
 

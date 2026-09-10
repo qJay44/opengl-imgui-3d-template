@@ -1,9 +1,9 @@
 #pragma once
 
-#include "../Registry.hpp"
+#include "entt/entity/fwd.hpp"
 
 namespace ecs::RenderSystem {
-  void render(Registry& registry);
+  void render(entt::registry& registry);
 };
 
 

@@ -25,6 +25,7 @@ using glm::mat4;
 // #include "glad/glad.h" // Windows version?
 #include "glad/gl.h"
 #include "GLFW/glfw3.h"
+#include "entt/entt.hpp"
 #include "defines.hpp"
 
 #define UTILS_ENABLE_GLM
@@ -43,6 +44,7 @@ using glm::mat4;
 #include <functional>
 #include <future>
 #include <list>
+#include <print>
 #include <span>
 #include <string>
 #include <type_traits>

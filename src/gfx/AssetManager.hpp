@@ -8,6 +8,16 @@ namespace gfx {
 
 class AssetManager {
 public:
+  AssetManager() = default;
+
+  AssetManager(const AssetManager&) = delete;
+  AssetManager(AssetManager&&) = default;
+
+  AssetManager& operator=(const AssetManager&) = delete;
+  AssetManager& operator=(AssetManager&&) = default;
+
+  ~AssetManager() = default;
+
   struct ShaderMetadata {
     fspath vsPath{};
     fspath fsPath{};

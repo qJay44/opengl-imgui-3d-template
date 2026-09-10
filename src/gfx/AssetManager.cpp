@@ -41,9 +41,7 @@ void AssetManager::loadFromObj(fspath filepath, bool printInfo) {
   std::string filename = filepath.filename().string();
 
   if (meshes.contains(filename)) {
-    #ifndef NDEBUG
-      warning("[AssetManager::loadFromObj] Mesh ({}) already loaded", filename);
-    #endif
+    warning("[AssetManager::loadFromObj] Mesh ({}) already loaded", filename);
     return;
   }
 
@@ -65,7 +63,7 @@ void AssetManager::loadFromObj(fspath filepath, bool printInfo) {
   const std::vector<tinyobj::shape_t>& shapes = reader.GetShapes();
   // const std::vector<tinyobj::material_t>& materials = reader.GetMaterials();
 
-  std::vector<vertex::PCTN> vertices;
+  std::vector<vertex::PTNC> vertices;
   std::vector<GLuint> indices;
   std::unordered_map<tinyobj::index_t, uint32_t, IndexHasher, IndexEqual> uniqueVertices;
 
@@ -74,7 +72,7 @@ void AssetManager::loadFromObj(fspath filepath, bool printInfo) {
       auto [it, inserted] = uniqueVertices.emplace(idx, vertices.size());
 
       if (inserted) {
-        vertex::PCTN vertex;
+        vertex::PTNC vertex;
 
         vertex.position = {
           attrib.vertices[3 * idx.vertex_index + 0],
@@ -82,20 +80,20 @@ void AssetManager::loadFromObj(fspath filepath, bool printInfo) {
           attrib.vertices[3 * idx.vertex_index + 2]
         };
 
+        // Check if `texcoord_index` is zero or positive. negative = no texcoord data
+        if (idx.texcoord_index >= 0) {
+          vertex.texture = {
+            attrib.texcoords[2 * idx.texcoord_index + 0],
+            attrib.texcoords[2 * idx.texcoord_index + 1]
+          };
+        }
+
         // Check if `normal_index` is zero or positive. negative = no normal data
         if (idx.normal_index >= 0) {
           vertex.normal = {
             attrib.normals[3 * idx.normal_index + 0],
             attrib.normals[3 * idx.normal_index + 1],
             attrib.normals[3 * idx.normal_index + 2]
-          };
-        }
-
-        // Check if `texcoord_index` is zero or positive. negative = no texcoord data
-        if (idx.texcoord_index >= 0) {
-          vertex.texture = {
-            attrib.texcoords[2 * idx.texcoord_index + 0],
-            attrib.texcoords[2 * idx.texcoord_index + 1]
           };
         }
 
@@ -140,9 +138,7 @@ void AssetManager::loadFromObj(fspath filepath, bool printInfo) {
 
 void AssetManager::createShader(const std::string& name, ShaderMetadata meta) {
   if (shaders.contains(name)) {
-    #ifndef NDEBUG
-      warning("[AssetManager::createShader] Shader ({}) already create", name);
-    #endif
+    warning("[AssetManager::createShader] Shader ({}) already created", name);
     return;
   }
 
@@ -156,6 +152,15 @@ void AssetManager::createShader(const std::string& name, ShaderMetadata meta) {
     shader = Shader(meta.vsPath, meta.fsPath, meta.gsPath);
 
   shaders.emplace(name, std::make_unique<Shader>(std::move(shader)));
+}
+
+void AssetManager::createCamera(const std::string& name, core::Camera&& camera) {
+  if (cameras.contains(name)) {
+    warning("[AssetManager::createCamera] Camera ({}) already created", name);
+    return;
+  }
+
+  cameras.emplace(name, std::make_unique<core::Camera>(std::move(camera)));
 }
 
 Mesh* AssetManager::getMesh(const std::string& name) const {

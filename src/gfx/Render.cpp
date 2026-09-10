@@ -60,10 +60,10 @@ void Renderer::beginFrame() const {
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glEnable(GL_CULL_FACE);  // Disable for flat meshes, enable for volumetric meshes
   glEnable(GL_DEPTH_TEST); // Disable to ignore depth (draw one object over another one without discarding the farthest)
-  // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE + !global::wireframeMode); // Always use GL_FILL for fullscreen quads
 }
 
-void Renderer::submit(const gfx::Mesh* mesh, const gfx::Shader* shader, const mat4& model) const {
+void Renderer::submit(const gfx::Mesh* mesh) const {
+  glPolygonMode(GL_FRONT_AND_BACK, mesh->polygonMode); // Always use GL_FILL for fullscreen quads
   mesh->vao.bind();
 
   std::visit([](auto&& arg) {
@@ -76,8 +76,8 @@ void Renderer::submit(const gfx::Mesh* mesh, const gfx::Shader* shader, const ma
   }, mesh->drawCmd);
 }
 
-void Renderer::endFrame(const core::EngineContext* ctx) const {
-  glfwSwapBuffers(ctx->window);
+void Renderer::endFrame(const core::EngineContext& ctx) const {
+  glfwSwapBuffers(ctx.window);
   glfwPollEvents();
 }
 

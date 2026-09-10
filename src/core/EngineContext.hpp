@@ -3,6 +3,16 @@
 namespace core {
 
 struct EngineContext {
+  EngineContext() = default;
+
+  EngineContext(const EngineContext&) = delete;
+  EngineContext(EngineContext&&) = default;
+
+  EngineContext& operator=(const EngineContext&) = delete;
+  EngineContext& operator=(EngineContext&&) = default;
+
+  ~EngineContext() = default;
+
   GLFWwindow* window = nullptr;
   double dt = 1e-6;
   double time = 0.0;
@@ -24,9 +34,14 @@ struct EngineContext {
     return res;
   }
 
-  inline float getAspectRatio() const {
+  inline float getAspectRatio_WidthOverHeight() const {
     vec2 winSize = getWinSize();
     return winSize.x / winSize.y;
+  }
+
+  inline float getAspectRatio_HeihtOverWidth() const {
+    vec2 winSize = getWinSize();
+    return winSize.y / winSize.x;
   }
 };
 
