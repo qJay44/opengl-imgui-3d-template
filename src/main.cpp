@@ -3,6 +3,7 @@
 #include "ecs/components/MeshComponent.hpp"
 #include "ecs/components/TransformComponent.hpp"
 #include "ecs/components/VelocityComponent.hpp"
+#include "ecs/components/TextureComponent.hpp"
 #include "ecs/systems/CameraSystem.hpp"
 #include "ecs/systems/MovementSystem.hpp"
 #include "ecs/systems/RenderSystem.hpp"
@@ -13,6 +14,7 @@
 #include "gfx/AssetManager.hpp"
 #include "gfx/Render.hpp"
 #include "gfx/Shader.hpp"
+#include "gfx/texture/Texture2D.hpp"
 
 int main() {
   // Assuming the executable is launching from its own directory
@@ -55,10 +57,21 @@ int main() {
 
     gfx::Shader::setDirectoryLocation("res/shaders");
 
+    gfx::Texture2D debugTex0(
+      gfx::image2D("res/tex/debug/uvChecker.jpg"),
+      {
+        .minFilter = GL_NEAREST,
+        .magFilter = GL_NEAREST,
+        .wrapS = GL_REPEAT,
+        .wrapT = GL_REPEAT,
+    });
+
+    // TODO: Something wrong with texture coordinates
     gfx::AssetManager assetManager;
     assetManager.loadFromObj("res/obj/Cube.obj");
-    assetManager.createShader("DefaultCube", {"PTNC.vert", "test.frag"});
-    assetManager.createCamera("DefaultCamera", {});
+    assetManager.addShader("DefaultCube", gfx::Shader("PTNC.vert", "test.frag"));
+    assetManager.addTexture("DebugTexture0", std::move(debugTex0));
+    assetManager.addCamera("DefaultCamera", {});
 
     registry.ctx().emplace<core::EngineContext>(std::move(ctx));
     registry.ctx().emplace<gfx::Renderer>(std::move(renderer));
@@ -71,11 +84,6 @@ int main() {
 
   // ----- Entities ---------------------------------------------------------------------------------------------------------------- //
 
-  ecs::component::CameraComponent mainCamComponent{
-    .cam = assetManager.getCamera("DefaultCamera"),
-    .isActive = true
-  };
-
   entt::entity entCube = registry.create();
   {
     ecs::component::MeshComponent meshComponent{
@@ -83,9 +91,12 @@ int main() {
       .shader = assetManager.getShader("DefaultCube")
     };
 
+    ecs::component::TextureComponent textureComponent;
+    textureComponent.textures.push_back(assetManager.getTexture("DebugTexture0"));
+
     registry.emplace<ecs::component::MeshComponent>(entCube, meshComponent);
-    registry.emplace<ecs::component::CameraComponent>(entCube, mainCamComponent);
     registry.emplace<ecs::component::TransformComponent>(entCube, ecs::component::TransformComponent{});
+    registry.emplace<ecs::component::TextureComponent>(entCube, textureComponent);
   }
 
   entt::entity entCamera = registry.create();
@@ -94,15 +105,28 @@ int main() {
       .pos = {0.f, 0.f, 25.f}
     };
 
+    ecs::component::CameraComponent mainCamComponent{
+      .cam = assetManager.getCamera("DefaultCamera"),
+      .isActive = true
+    };
+
+    ecs::component::VelocityComponent velComponent{
+      .scale = 10.f
+    };
+
     registry.emplace<ecs::component::CameraComponent>(entCamera, mainCamComponent);
     registry.emplace<ecs::component::TransformComponent>(entCamera, transComponent);
-    registry.emplace<ecs::component::VelocityComponent>(entCamera, ecs::component::VelocityComponent{});
+    registry.emplace<ecs::component::VelocityComponent>(entCamera, velComponent);
   }
 
   while (!glfwWindowShouldClose(window)) {
+    assetManager.checkShaders();
+
     // ----- Updates ----------------------------------------------------------------------------------------------------------------- //
 
-    ecs::TimeSystem::update(registry);
+    if (!ecs::TimeSystem::update(registry))
+      continue;
+
     ecs::InputSystem::update(registry);
     ecs::MovementSystem::update(registry);
     ecs::CameraSystem::update(registry);

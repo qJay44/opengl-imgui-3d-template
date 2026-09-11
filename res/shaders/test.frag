@@ -7,12 +7,12 @@ in vec3 v_color;
 
 out vec4 FragColor;
 
-// layout(binding = 0) uniform sampler2D u_debug0Tex;
+layout(binding = 0) uniform sampler2D u_debug0Tex;
 
 // uniform vec3 u_lightPos;
 // uniform vec3 u_lightColor;
 uniform vec3 u_camPos;
-// uniform float u_time;
+uniform float u_time;
 
 // vec3 directionalLight() {
 //   vec3 lightDistVec = u_lightPos - v_worldPos;
@@ -34,12 +34,11 @@ uniform vec3 u_camPos;
 // }
 
 void main() {
-  // vec2 offset = vec2(0.f);
-  // offset.y = -u_time * 0.1f;
+  vec2 offset = vec2(0.f);
+  offset.y = u_time * 0.1f;
 
-  // vec3 col = texture(u_debug0Tex, v_uv + offset).rgb;
+  vec3 col = texture(u_debug0Tex, v_uv + offset).rgb;
   // col *= directionalLight();
-	// FragColor = vec4(col, 1.f);
-	FragColor = vec4(1.f);
+	FragColor = vec4(col, 1.f);
 }
 

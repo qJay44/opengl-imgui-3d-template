@@ -5,7 +5,7 @@
 #include "../systems/CameraSystem.hpp"
 #include "../components/VelocityComponent.hpp"
 #include "../components/MeshComponent.hpp"
-#include <GLFW/glfw3.h>
+#include "../components/CameraComponent.hpp"
 
 namespace ecs::InputSystem {
 

@@ -1,12 +1,24 @@
 #pragma once
 
 #include "mesh/Mesh.hpp"
+#include "Shader.hpp"
+#include "texture/Texture.hpp"
 #include "../core/EngineContext.hpp"
+#include "../core/Camera.hpp"
 
 namespace gfx {
 
 class Renderer {
 public:
+  struct RenderCommand {
+    Shader* shader;
+    const Mesh* mesh;
+    const core::Camera* cam;
+    const mat4& model;
+    const vec3& camPos;
+    std::vector<Texture*> textures;
+  };
+
   Renderer() = default;
 
   Renderer(const Renderer&) = delete;
@@ -18,9 +30,17 @@ public:
   ~Renderer() = default;
 
   void init(const core::EngineContext *ctx) const;
-  void beginFrame() const;
-  void submit(const gfx::Mesh* mesh) const;
-  void endFrame(const core::EngineContext& ctx) const;
+
+  void beginFrame(ivec2 viewPort) const;
+  void setProjectionMat(const mat4& proj);
+  void setViewMat(const mat4& view);
+  void submit(const RenderCommand&& cmd);
+  void endFrame(const core::EngineContext& ctx);
+private:
+
+  std::list<RenderCommand> renderQueue;
+  mat4 renderProj;
+  mat4 renderView;
 };
 
 } // namespace gfx

@@ -136,31 +136,37 @@ void AssetManager::loadFromObj(fspath filepath, bool printInfo) {
   meshes.emplace(filename, std::make_unique<Mesh>(Mesh(MeshData(vertices, indices))));
 }
 
-void AssetManager::createShader(const std::string& name, ShaderMetadata meta) {
+void AssetManager::addShader(const std::string& name, Shader&& shader) {
   if (shaders.contains(name)) {
     warning("[AssetManager::createShader] Shader ({}) already created", name);
     return;
   }
 
-  Shader shader;
-
-  if (!meta.tescPath.empty())
-    shader = Shader(meta.vsPath, meta.fsPath, meta.tescPath, meta.tesePath, meta.gsPath);
-  else if (!meta.compPath.empty())
-    shader = Shader(meta.compPath);
-  else
-    shader = Shader(meta.vsPath, meta.fsPath, meta.gsPath);
-
   shaders.emplace(name, std::make_unique<Shader>(std::move(shader)));
 }
 
-void AssetManager::createCamera(const std::string& name, core::Camera&& camera) {
+void AssetManager::addTexture(const std::string& name, Texture&& texture) {
+  if (textures.contains(name)) {
+    warning("[AssetManager::createCamera] Camera ({}) already created", name);
+    return;
+  }
+
+  textures.emplace(name, std::make_unique<Texture>(std::move(texture)));
+}
+
+void AssetManager::addCamera(const std::string& name, core::Camera&& camera) {
   if (cameras.contains(name)) {
     warning("[AssetManager::createCamera] Camera ({}) already created", name);
     return;
   }
 
   cameras.emplace(name, std::make_unique<core::Camera>(std::move(camera)));
+}
+
+void AssetManager::checkShaders() {
+  for (auto& [name, shader] : shaders)
+    if (shader->needsReload())
+      shader->reload();
 }
 
 Mesh* AssetManager::getMesh(const std::string& name) const {
@@ -171,6 +177,11 @@ Mesh* AssetManager::getMesh(const std::string& name) const {
 Shader* AssetManager::getShader(const std::string& name) const {
   assert(contains(shaders, name));
   return shaders.at(name).get();
+}
+
+Texture* AssetManager::getTexture(const std::string& name) const {
+  assert(contains(textures, name));
+  return textures.at(name).get();
 }
 
 core::Camera* AssetManager::getCamera(const std::string& name) const {

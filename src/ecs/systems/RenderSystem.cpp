@@ -3,10 +3,10 @@
 #include "../components/MeshComponent.hpp"
 #include "../components/CameraComponent.hpp"
 #include "../components/TransformComponent.hpp"
+#include "../components/TextureComponent.hpp"
 #include "../../core/EngineContext.hpp"
 #include "../../gfx/Render.hpp"
 #include "TransformSystem.hpp"
-#include "CameraSystem.hpp"
 
 namespace ecs::RenderSystem {
 
@@ -33,21 +33,30 @@ void render(entt::registry& registry) {
 
   assert(activeCam);
 
-  auto meshView = registry.view<MeshComponent, CameraComponent, TransformComponent>();
+  auto meshView = registry.view<MeshComponent, TransformComponent>();
 
-  renderer.beginFrame();
+  // TODO: Create a separate system (e.g. CubeRenderSystem)?
+  renderer.beginFrame(ctx.getWinSize());
+  renderer.setProjectionMat(activeCam->cachedProj);
+  renderer.setViewMat(activeCam->cachedView);
 
   for (auto& entity : meshView) {
     const auto& meshComponent = registry.get<MeshComponent>(entity);
-    const auto& camComponent = registry.get<CameraComponent>(entity);
     const auto& transComponent = registry.get<TransformComponent>(entity);
+    const auto* textureComponentPtr = registry.try_get<TextureComponent>(entity);
 
-    meshComponent.shader->use();
-    meshComponent.shader->setUniformMatrix4f("u_model", TransformSystem::getModel(transComponent));
-    meshComponent.shader->setUniform3f("u_camPos", activeCamPos);
-    CameraSystem::setCommonUniforms(camComponent, meshComponent.shader);
+    gfx::Renderer::RenderCommand renderCmd{
+      .shader = meshComponent.shader,
+      .mesh = meshComponent.mesh,
+      .cam  = activeCam,
+      .model = TransformSystem::getModel(transComponent),
+      .camPos = activeCamPos,
+    };
 
-    renderer.submit(meshComponent.mesh);
+    if (textureComponentPtr)
+      renderCmd.textures = textureComponentPtr->textures;
+
+    renderer.submit(std::move(renderCmd));
   }
 
   renderer.endFrame(ctx);

@@ -7,8 +7,6 @@ namespace gfx {
 
 class Shader {
 public:
-  Shader() = default;
-
   Shader(const Shader&) = delete;
   Shader(Shader&& other);
 
@@ -16,6 +14,22 @@ public:
   Shader& operator=(Shader&& other);
 
   ~Shader();
+
+  [[nodiscard]] Shader(
+    const fspath& vsPath,
+    const fspath& fsPath,
+    const fspath& gsPath = ""
+  );
+
+  [[nodiscard]] Shader(
+    const fspath& vsPath,
+    const fspath& fsPath,
+    const fspath& tescPath,
+    const fspath& tesePath,
+    const fspath& gsPath = ""
+  );
+
+  [[nodiscard]] Shader(const fspath& compPath);
 
   static void setDirectoryLocation(const fspath& path);
 
@@ -57,24 +71,6 @@ private:
   std::unordered_map<GLenum, std::pair<fspath, std::filesystem::file_time_type>> shadersMetadata;
 
 private:
-  friend class AssetManager;
-
-  [[nodiscard]] Shader(
-    const fspath& vsPath,
-    const fspath& fsPath,
-    const fspath& gsPath = ""
-  );
-
-  [[nodiscard]] Shader(
-    const fspath& vsPath,
-    const fspath& fsPath,
-    const fspath& tescPath,
-    const fspath& tesePath,
-    const fspath& gsPath = ""
-  );
-
-  [[nodiscard]] Shader(const fspath& compPath);
-
   std::string load(std::unordered_set<std::string>& includedShaders, fspath path);
   GLuint compile(fspath path, GLenum type);
   void link(GLuint program);

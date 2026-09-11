@@ -3,6 +3,7 @@
 #include "mesh/Mesh.hpp"
 #include "Shader.hpp"
 #include "../core/Camera.hpp"
+#include "texture/Texture.hpp"
 
 namespace gfx {
 
@@ -18,26 +19,23 @@ public:
 
   ~AssetManager() = default;
 
-  struct ShaderMetadata {
-    fspath vsPath{};
-    fspath fsPath{};
-    fspath tescPath{};
-    fspath tesePath{};
-    fspath gsPath{};
-    fspath compPath{};
-  };
-
   void loadFromObj(fspath filepath, bool printInfo = false);
-  void createShader(const std::string& name, ShaderMetadata meta);
-  void createCamera(const std::string& name, core::Camera&& camera);
+  void addShader(const std::string& name, Shader&& shader);
+  void addTexture(const std::string& name, Texture&& texture);
+  void addCamera(const std::string& name, core::Camera&& camera);
+
+  void checkShaders();
 
   Mesh* getMesh(const std::string& name) const;
   Shader* getShader(const std::string& name) const;
+  Texture* getTexture(const std::string& name) const;
   core::Camera* getCamera(const std::string& name) const;
 
 private:
+
   std::unordered_map<std::string, std::unique_ptr<Mesh>> meshes;
   std::unordered_map<std::string, std::unique_ptr<Shader>> shaders;
+  std::unordered_map<std::string, std::unique_ptr<Texture>> textures;
   std::unordered_map<std::string, std::unique_ptr<core::Camera>> cameras;
 
 private:

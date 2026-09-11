@@ -2,6 +2,7 @@
 
 #include "entt/entity/fwd.hpp"
 #include "../../core/EngineContext.hpp"
+#include "../components/CameraComponent.hpp"
 #include "../components/TransformComponent.hpp"
 
 namespace ecs::CameraSystem {
@@ -45,18 +46,6 @@ void update(entt::registry& registry) {
       break;
     }
   }
-}
-
-void setCommonUniforms(const CameraComponent& camComponent, gfx::Shader* shader) {
-  const auto* cam = camComponent.cam;
-
-  shader->setUniformMatrix4f("u_camProj", camComponent.cam->cachedProj);
-  shader->setUniformMatrix4f("u_camView", camComponent.cam->cachedView);
-  shader->setUniform1f("u_camNear", cam->nearPlane);
-  shader->setUniform1f("u_camFar", cam->farPlane);
-  shader->setUniform1f("u_camFov", cam->fov);
-  shader->setUniform3f("u_camUp", cam->up);
-  shader->setUniform3f("u_camForward", cam->orientation);
 }
 
 }; // namespace ecs::CameraSystem
