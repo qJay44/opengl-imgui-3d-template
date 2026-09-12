@@ -1,1 +1,0 @@
-Holds #window, #time, #dt

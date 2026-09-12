@@ -1,1 +1,0 @@
-Handles input in [[KeyboardState]] obtained from [[Registry]]
