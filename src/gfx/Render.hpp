@@ -32,7 +32,7 @@ public:
 
   void init(const core::EngineContext *ctx) const;
 
-  void beginFrame(ivec2 viewPort) const;
+  void beginFrame(ivec2 viewPort);
 
   void setProjectionMat(const mat4& proj);
   void setViewMat(const mat4& view);

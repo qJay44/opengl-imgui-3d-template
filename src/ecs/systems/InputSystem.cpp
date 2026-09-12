@@ -6,6 +6,7 @@
 #include "../components/VelocityComponent.hpp"
 #include "../components/MeshComponent.hpp"
 #include "../components/CameraComponent.hpp"
+#include "../../gui/gui.hpp"
 
 namespace ecs::InputSystem {
 
@@ -28,7 +29,33 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
   if (action == GLFW_PRESS)   ctx.keyboardKeys[key] = true;
   if (action == GLFW_RELEASE) ctx.keyboardKeys[key] = false;
 
+  if (ctx.guiFocused) {
+    if (key == GLFW_KEY_R) {
+      if (action == GLFW_PRESS) {
+        dvec2 winCenter = ctx.getWinCenter();
+        ctx.guiFocused = false;
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+        glfwSetCursorPos(window, winCenter.x, winCenter.y);
+      }
+    } else {
+      gui::keyCallback(window, key, scancode, action, mods);
+    }
+    return;
+  }
+
   switch (key) {
+    case GLFW_KEY_R:
+      if (action == GLFW_PRESS) {
+        ctx.guiFocused = true;
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+      }
+      break;
+    case GLFW_KEY_E:
+      if (action == GLFW_PRESS) gui::toggleConfig();
+      break;
+    case GLFW_KEY_C:
+      if (action == GLFW_PRESS) gui::toggleInfo();
+      break;
     case GLFW_KEY_1:
       if (action == GLFW_PRESS) {
         auto meshView = registry->view<MeshComponent>();
@@ -39,17 +66,20 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
       }
       break;
   }
-
-  // glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL + 2 * (key == GLFW_KEY_R));
 }
 
 void scrollCallback(GLFWwindow* window, double xoffset, double yoffset) {
+  gui::scrollCallback(window, xoffset, yoffset);
 }
 
 void cursorPosCallback(GLFWwindow* window, double xpos, double ypos) {
   entt::registry* registry = getRegistryFromGLFW(window);
+  auto& ctx = registry->ctx().get<core::EngineContext>();
 
-  CameraSystem::onMouseMove(*registry, dvec2(xpos, ypos));
+  if (!ctx.guiFocused)
+    CameraSystem::onMouseMove(*registry, dvec2(xpos, ypos));
+  else
+    gui::cursorPosCallback(window, xpos, ypos);
 }
 
 } // namespace

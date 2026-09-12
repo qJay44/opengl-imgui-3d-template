@@ -17,6 +17,7 @@ struct EngineContext {
   double dt = 1e-6;
   double time = 0.0;
   bool keyboardKeys[GLFW_KEY_LAST]{};
+  bool guiFocused = false;
 
   inline ivec2 getWinSize() const {
     ivec2 res;

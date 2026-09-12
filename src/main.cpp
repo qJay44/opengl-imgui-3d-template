@@ -16,6 +16,7 @@
 #include "gfx/Render.hpp"
 #include "gfx/Shader.hpp"
 #include "gfx/texture/Texture2D.hpp"
+#include "gui/gui.hpp"
 
 int main() {
   // GLFW init
@@ -85,6 +86,7 @@ int main() {
 
   auto& assetManager = registry.ctx().get<gfx::AssetManager>();
 
+  gui::init(window);
   ecs::InputSystem::init(registry);
 
   // ----- Entities ---------------------------------------------------------------------------------------------------------------- //
@@ -125,9 +127,9 @@ int main() {
   }
 
   while (!glfwWindowShouldClose(window)) {
-    assetManager.checkShaders();
-
     // ----- Updates ----------------------------------------------------------------------------------------------------------------- //
+
+    assetManager.checkShaders();
 
     if (!ecs::TimeSystem::update(registry))
       continue;
@@ -136,11 +138,18 @@ int main() {
     ecs::MovementSystem::update(registry);
     ecs::CameraSystem::update(registry);
 
-    // ----- Draw -------------------------------------------------------------------------------------------------------------------- //
+    // ----- Render ------------------------------------------------------------------------------------------------------------------ //
 
     ecs::RenderSystem::render(registry);
+    gui::render(registry);
+
+    // ----- Loop end ---------------------------------------------------------------------------------------------------------------- //
+
+    glfwSwapBuffers(window);
+    glfwPollEvents();
   }
 
+  gui::shutdown();
   glfwTerminate();
 
   return EXIT_SUCCESS;

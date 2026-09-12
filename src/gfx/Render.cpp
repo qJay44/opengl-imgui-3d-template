@@ -58,7 +58,8 @@ void Renderer::init(const core::EngineContext* ctx) const {
   glFrontFace(GL_CCW);
 }
 
-void Renderer::beginFrame(ivec2 viewPort) const {
+void Renderer::beginFrame(ivec2 viewPort) {
+  renderQueue.clear();
   glViewport(0, 0, viewPort.x, viewPort.y);
   glClearColor(0.f, 0.f, 0.f, 1.f);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -119,7 +120,7 @@ void Renderer::endFrame(const core::EngineContext& ctx) {
       const Texture*& currTex = currBoundTextures[i];
       const Texture* cmdTex = command.textures[i];
 
-      if (!currTex || currTex != cmdTex) {
+      if (currTex != cmdTex) {
         currTex = cmdTex;
         currTex->bind(i);
       }
@@ -136,9 +137,6 @@ void Renderer::endFrame(const core::EngineContext& ctx) {
       }
     }, currBoundMesh->drawCmd);
   }
-
-  glfwSwapBuffers(ctx.window);
-  glfwPollEvents();
 }
 
 } // namespace gfx

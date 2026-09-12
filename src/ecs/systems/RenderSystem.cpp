@@ -40,7 +40,7 @@ void render(entt::registry& registry) {
 
   auto meshView = registry.view<MeshComponent, TransformComponent>();
 
-  // TODO: Create a separate system (e.g. CubeRenderSystem)?
+  // TODO: What about FBOs?
   renderer.beginFrame(ctx.getWinSize());
   renderer.setProjectionMat(activeCam->cachedProj);
   renderer.setViewMat(activeCam->cachedView);
