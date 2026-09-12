@@ -1,3 +1,4 @@
+#include "ProfilerManager.hpp"
 #include "core/EngineContext.hpp"
 #include "core/Light.hpp"
 #include "ecs/components/CameraComponent.hpp"
@@ -79,12 +80,16 @@ int main() {
     assetManager.addCamera("DefaultCamera", {});
     assetManager.addLight("GlobalLight", std::move(globalLight));
 
+    ProfilerManager profiler(60);
+
     registry.ctx().emplace<core::EngineContext>(std::move(ctx));
     registry.ctx().emplace<gfx::Renderer>(std::move(renderer));
     registry.ctx().emplace<gfx::AssetManager>(std::move(assetManager));
+    registry.ctx().emplace<ProfilerManager>(std::move(profiler));
   }
 
   auto& assetManager = registry.ctx().get<gfx::AssetManager>();
+  auto& profiler = registry.ctx().get<ProfilerManager>();
 
   gui::init(window);
   ecs::InputSystem::init(registry);
@@ -129,7 +134,10 @@ int main() {
   while (!glfwWindowShouldClose(window)) {
     // ----- Updates ----------------------------------------------------------------------------------------------------------------- //
 
+    profiler.clearTasks();
     assetManager.checkShaders();
+
+    auto _taskUpdatesPass = profiler.startScopedTaskCpu("UpdatesPass");
 
     if (!ecs::TimeSystem::update(registry))
       continue;
@@ -142,6 +150,8 @@ int main() {
 
     ecs::RenderSystem::render(registry);
     gui::render(registry);
+
+    _taskUpdatesPass.end();
 
     // ----- Loop end ---------------------------------------------------------------------------------------------------------------- //
 

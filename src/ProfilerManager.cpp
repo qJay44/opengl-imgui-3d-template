@@ -1,11 +1,14 @@
 #include "ProfilerManager.hpp"
-#include "global.hpp"
 
 // ----- ScopedTaskCpu ----------------------------------------------------------------------------------------------------------- //
 
 using ScopedTaskCpu = ProfilerManager::ScopedTaskCpu;
 
-ScopedTaskCpu::ScopedTaskCpu(size_t taskIdx) : taskIdx(taskIdx), start(std::chrono::steady_clock::now()) {}
+ScopedTaskCpu::ScopedTaskCpu(ProfilerManager* profiler, size_t taskIdx)
+  : profiler(profiler), taskIdx(taskIdx), start(std::chrono::steady_clock::now())
+{
+  assert(profiler);
+}
 
 ScopedTaskCpu::~ScopedTaskCpu() {
   end();
@@ -21,14 +24,16 @@ void ScopedTaskCpu::end() {
   auto dur = end - start;
   auto durationSec = duration_cast<duration<double>>(dur).count();
 
-  // global::profiler.endTaskCpu(taskIdx, durationSec);
+  assert(profiler);
+  profiler->endTaskCpu(taskIdx, durationSec);
 }
 
 // ----- ScopedTaskGpu ----------------------------------------------------------------------------------------------------------- //
 
 using ScopedTaskGpu = ProfilerManager::ScopedTaskGpu;
 
-ScopedTaskGpu::ScopedTaskGpu(size_t taskIdx, const Query& q) : taskIdx(taskIdx), q(q) {
+ScopedTaskGpu::ScopedTaskGpu(ProfilerManager* profiler, size_t taskIdx, const Query& q) : profiler(profiler), taskIdx(taskIdx), q(q) {
+  assert(profiler);
   glQueryCounter(q.q0, GL_TIMESTAMP);
 }
 
@@ -42,7 +47,8 @@ void ScopedTaskGpu::end() {
 
   glQueryCounter(q.q1, GL_TIMESTAMP);
 
-  // global::profiler.endTaskGpu(taskIdx, q.calcDuration());
+  assert(profiler);
+  profiler->endTaskGpu(taskIdx, q.calcDuration());
 }
 
 // ----- Qurie ------------------------------------------------------------------------------------------------------------------- //
@@ -84,7 +90,7 @@ ProfilerManager::ScopedTaskCpu ProfilerManager::startScopedTaskCpu(const std::st
 
   cpuTasks.push_back(task);
 
-  return taskIdx;
+  return ProfilerManager::ScopedTaskCpu(this, taskIdx);
 }
 
 ProfilerManager::ScopedTaskGpu ProfilerManager::startScopedTaskGpu(const Query& q, u32 color) {
@@ -98,7 +104,7 @@ ProfilerManager::ScopedTaskGpu ProfilerManager::startScopedTaskGpu(const Query& 
 
   gpuTasks.push_back(task);
 
-  return {taskIdx, q};
+  return ProfilerManager::ScopedTaskGpu(this, taskIdx, q);
 }
 
 void ProfilerManager::renderTasks(int graphWidth, int legendWidth, int height, int frameIndexOffset) {

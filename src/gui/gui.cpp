@@ -1,5 +1,6 @@
 #include "gui.hpp"
 
+#include "ProfilerManager.hpp"
 #include "glm/gtc/type_ptr.hpp"
 #include "imgui.h"
 // #include "implot.h"
@@ -51,13 +52,14 @@ void render(entt::registry& registry) {
 
   auto& ctx = registry.ctx().get<core::EngineContext>();
   auto& assetManager = registry.ctx().get<gfx::AssetManager>();
+  auto& profiler = registry.ctx().get<ProfilerManager>();
 
   // ::::: Config window ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: //
 
   ImGui::SetNextWindowPos({0, 0}, ImGuiCond_FirstUseEver);
   ImGui::SetNextWindowCollapsed(configCollapsed);
 
-  // auto _task = global::profiler->startScopedTask("gui::draw");
+  auto _task = profiler.startScopedTaskCpu("gui::draw");
 
   ImGui::Begin("Config");
 
@@ -70,6 +72,8 @@ void render(entt::registry& registry) {
 
   ImGui::End();
 
+  _task.end();
+
   // ::::: Info window ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: //
 
   const ImGuiViewport* viewport = ImGui::GetMainViewport();
@@ -78,14 +82,7 @@ void render(entt::registry& registry) {
   ImGui::SetNextWindowPos(posBR, ImGuiCond_Always, {1.f, 1.f});
   ImGui::SetNextWindowCollapsed(infoCollapsed);
 
-  ImGui::Begin("Info");
-
-  // ImGui::Text("FPS: %d / %f.5 ms", fps, global::dt);
-
-  // assert(global::profiler);
-  // global::profiler->renderTasks(400, 200, 200, 0);
-
-  ImGui::End();
+  profiler.renderTasks(400, 200, 200, 0);
 
   // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: //
 
