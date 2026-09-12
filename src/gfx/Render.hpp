@@ -5,6 +5,7 @@
 #include "texture/Texture.hpp"
 #include "../core/EngineContext.hpp"
 #include "../core/Camera.hpp"
+#include "../core/Light.hpp"
 
 namespace gfx {
 
@@ -14,8 +15,8 @@ public:
     Shader* shader;
     const Mesh* mesh;
     const core::Camera* cam;
-    const mat4& model;
     const vec3& camPos;
+    const mat4& model;
     std::vector<Texture*> textures;
   };
 
@@ -32,8 +33,11 @@ public:
   void init(const core::EngineContext *ctx) const;
 
   void beginFrame(ivec2 viewPort) const;
+
   void setProjectionMat(const mat4& proj);
   void setViewMat(const mat4& view);
+  void setGlobalLight(const core::Light* light);
+
   void submit(const RenderCommand&& cmd);
   void endFrame(const core::EngineContext& ctx);
 private:
@@ -41,6 +45,7 @@ private:
   std::list<RenderCommand> renderQueue;
   mat4 renderProj;
   mat4 renderView;
+  const core::Light* globalLight{};
 };
 
 } // namespace gfx

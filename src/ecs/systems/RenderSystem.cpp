@@ -6,6 +6,7 @@
 #include "../components/TextureComponent.hpp"
 #include "../../core/EngineContext.hpp"
 #include "../../gfx/Render.hpp"
+#include "../../gfx/AssetManager.hpp"
 #include "TransformSystem.hpp"
 
 namespace ecs::RenderSystem {
@@ -15,6 +16,7 @@ using namespace ecs::component;
 void render(entt::registry& registry) {
   auto& ctx = registry.ctx().get<core::EngineContext>();
   auto& renderer = registry.ctx().get<gfx::Renderer>();
+  auto& assetManager = registry.ctx().get<gfx::AssetManager>();
 
   auto camView = registry.view<CameraComponent, TransformComponent>();
 
@@ -31,7 +33,10 @@ void render(entt::registry& registry) {
     }
   }
 
+  core::Light* globalLight = assetManager.getLight("GlobalLight");
+
   assert(activeCam);
+  assert(globalLight);
 
   auto meshView = registry.view<MeshComponent, TransformComponent>();
 
@@ -39,6 +44,7 @@ void render(entt::registry& registry) {
   renderer.beginFrame(ctx.getWinSize());
   renderer.setProjectionMat(activeCam->cachedProj);
   renderer.setViewMat(activeCam->cachedView);
+  renderer.setGlobalLight(globalLight);
 
   for (auto& entity : meshView) {
     const auto& meshComponent = registry.get<MeshComponent>(entity);
@@ -49,8 +55,8 @@ void render(entt::registry& registry) {
       .shader = meshComponent.shader,
       .mesh = meshComponent.mesh,
       .cam  = activeCam,
-      .model = TransformSystem::getModel(transComponent),
       .camPos = activeCamPos,
+      .model = TransformSystem::getModel(transComponent),
     };
 
     if (textureComponentPtr)

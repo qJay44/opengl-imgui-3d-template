@@ -147,7 +147,7 @@ void AssetManager::addShader(const std::string& name, Shader&& shader) {
 
 void AssetManager::addTexture(const std::string& name, Texture&& texture) {
   if (textures.contains(name)) {
-    warning("[AssetManager::createCamera] Camera ({}) already created", name);
+    warning("[AssetManager::addTexture] Texture ({}) already created", name);
     return;
   }
 
@@ -156,11 +156,20 @@ void AssetManager::addTexture(const std::string& name, Texture&& texture) {
 
 void AssetManager::addCamera(const std::string& name, core::Camera&& camera) {
   if (cameras.contains(name)) {
-    warning("[AssetManager::createCamera] Camera ({}) already created", name);
+    warning("[AssetManager::addCamera] Camera ({}) already created", name);
     return;
   }
 
   cameras.emplace(name, std::make_unique<core::Camera>(std::move(camera)));
+}
+
+void AssetManager::addLight(const std::string& name, core::Light&& light) {
+  if (lights.contains(name)) {
+    warning("[AssetManager::addLight] Light ({}) already created", name);
+    return;
+  }
+
+  lights.emplace(name, std::make_unique<core::Light>(std::move(light)));
 }
 
 void AssetManager::checkShaders() {
@@ -187,6 +196,11 @@ Texture* AssetManager::getTexture(const std::string& name) const {
 core::Camera* AssetManager::getCamera(const std::string& name) const {
   assert(contains(cameras, name));
   return cameras.at(name).get();
+}
+
+core::Light* AssetManager::getLight(const std::string& name) const {
+  assert(contains(lightsDirectional, name));
+  return lights.at(name).get();
 }
 
 bool AssetManager::contains(const auto& map, const std::string& name) {

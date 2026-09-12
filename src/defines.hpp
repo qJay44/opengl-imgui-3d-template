@@ -23,11 +23,3 @@
   constexpr ImVec4(const vec3& f, const float& w) : x(f.x), y(f.y), z(f.z), w(w) {} \
   operator vec4() const { return vec4(x,y,z,w); }
 
-#ifdef _WIN32
-  #include <direct.h>
-  #define CHDIR(p) _chdir(p);
-#else
-  #include <unistd.h>
-  #define CHDIR(p) chdir(p);
-#endif
-

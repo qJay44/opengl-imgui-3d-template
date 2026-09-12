@@ -1,4 +1,5 @@
 #include "core/EngineContext.hpp"
+#include "core/Light.hpp"
 #include "ecs/components/CameraComponent.hpp"
 #include "ecs/components/MeshComponent.hpp"
 #include "ecs/components/TransformComponent.hpp"
@@ -17,9 +18,6 @@
 #include "gfx/texture/Texture2D.hpp"
 
 int main() {
-  // Assuming the executable is launching from its own directory
-  CHDIR("../../..");
-
   // GLFW init
   glfwInit();
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
@@ -52,6 +50,13 @@ int main() {
     core::EngineContext ctx;
     ctx.window = window;
 
+    core::Light globalLight{
+      .color = vec3(1.f),
+      .direction = glm::normalize(vec3(0.45f, 0.45f, 0.f)),
+      .ambient = 0.1f,
+      .specular = 0.2f,
+    };
+
     gfx::Renderer renderer;
     renderer.init(&ctx);
 
@@ -66,12 +71,12 @@ int main() {
         .wrapT = GL_REPEAT,
     });
 
-    // TODO: Something wrong with texture coordinates
     gfx::AssetManager assetManager;
     assetManager.loadFromObj("res/obj/Cube.obj");
     assetManager.addShader("DefaultCube", gfx::Shader("PTNC.vert", "test.frag"));
     assetManager.addTexture("DebugTexture0", std::move(debugTex0));
     assetManager.addCamera("DefaultCamera", {});
+    assetManager.addLight("GlobalLight", std::move(globalLight));
 
     registry.ctx().emplace<core::EngineContext>(std::move(ctx));
     registry.ctx().emplace<gfx::Renderer>(std::move(renderer));

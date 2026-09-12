@@ -2,6 +2,7 @@
 
 #include "../core/EngineContext.hpp"
 #include "utils/clrp.hpp"
+#include <cassert>
 
 namespace gfx {
 
@@ -63,8 +64,9 @@ void Renderer::beginFrame(ivec2 viewPort) const {
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
-void Renderer::setProjectionMat(const mat4& proj) { renderProj = proj; }
-void Renderer::setViewMat(const mat4& view) { renderView = view; }
+void Renderer::setProjectionMat(const mat4& proj)       { renderProj  = proj; }
+void Renderer::setViewMat(const mat4& view)             { renderView  = view; }
+void Renderer::setGlobalLight(const core::Light* light) { globalLight = light; }
 
 void Renderer::submit(const RenderCommand&& cmd) {
   renderQueue.push_back(std::move(cmd));
@@ -75,9 +77,11 @@ void Renderer::endFrame(const core::EngineContext& ctx) {
     return a.shader < b.shader;
   });
 
+  assert(globalLight);
+
+  Shader* currBoundShader = nullptr;
   const Mesh* currBoundMesh = nullptr;
   const core::Camera* currBoundCamera = nullptr;
-  Shader* currBoundShader = nullptr;
   const Texture* currBoundTextures[MAX_TEXTURES]{};
 
   for (const auto& command : renderQueue) {
@@ -86,7 +90,11 @@ void Renderer::endFrame(const core::EngineContext& ctx) {
       currBoundShader->use();
       currBoundShader->setUniformMatrix4f("u_proj", renderProj);
       currBoundShader->setUniformMatrix4f("u_view", renderView);
+      currBoundShader->setUniform3f("u_lightColor", globalLight->color);
+      currBoundShader->setUniform3f("u_lightDir", globalLight->direction);
       currBoundShader->setUniform1f("u_time", ctx.time);
+      currBoundShader->setUniform1f("u_lightAmbient", globalLight->ambient);
+      currBoundShader->setUniform1f("u_lightSpecular", globalLight->specular);
     }
 
     if (command.mesh != currBoundMesh) {
