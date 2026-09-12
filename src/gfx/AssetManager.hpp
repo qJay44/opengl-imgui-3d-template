@@ -10,7 +10,7 @@ namespace gfx {
 
 class AssetManager {
 public:
-  AssetManager() = default;
+  AssetManager();
 
   AssetManager(const AssetManager&) = delete;
   AssetManager(AssetManager&&) = default;

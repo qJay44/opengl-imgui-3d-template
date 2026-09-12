@@ -8,6 +8,7 @@ namespace ecs::component {
 struct MeshComponent {
   gfx::Mesh* mesh;
   gfx::Shader* shader;
+  bool disabled = false;
 };
 
 } // namespace ecs::component

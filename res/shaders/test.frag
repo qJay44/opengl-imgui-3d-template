@@ -30,7 +30,7 @@ vec3 directionalLight() {
 
 void main() {
   vec2 offset = vec2(0.f);
-  offset.y = u_time * 0.1f;
+  offset.y = -u_time * 0.1f;
 
   vec3 col = texture(u_debug0Tex, v_uv + offset).rgb;
   col *= directionalLight();

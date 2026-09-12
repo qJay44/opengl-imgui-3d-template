@@ -1,6 +1,7 @@
 #pragma once
 
 #include "vertex.hpp"
+#include <cassert>
 
 namespace gfx {
 
@@ -19,7 +20,10 @@ struct MeshData {
   MeshData(std::vector<T>& vertices)
     : vertices(vertices.data()),
       verticesSize(vertices.size() * sizeof(T)),
-      layout(T::getLayout()) {}
+      layout(T::getLayout())
+  {
+    assert(vertices);
+  }
 
   template<vertex::IsVertexType T>
   MeshData(std::vector<T>& vertices, std::vector<GLuint>& indices)
@@ -27,7 +31,10 @@ struct MeshData {
       verticesSize(vertices.size() * sizeof(T)),
       indices(indices.data()),
       indicesSize(indices.size() * sizeof(GLuint)),
-      layout(T::getLayout()) {}
+      layout(T::getLayout())
+  {
+    assert(vertices);
+  }
 };
 
 } // namespace gfx

@@ -42,6 +42,10 @@ Mesh::Mesh(const MeshData& data) {
   // No need to unbind ebo here
 }
 
+void Mesh::togglePolygonMode() {
+  polygonMode = polygonMode == GL_FILL ? GL_LINE : GL_FILL;
+}
+
 void Mesh::linkAttributes(const vertex::Layout& layout) {
   size_t offset = 0;
 

@@ -1,8 +1,7 @@
-#include "Render.hpp"
+#include "Renderer.hpp"
 
 #include "../core/EngineContext.hpp"
 #include "utils/clrp.hpp"
-#include <cassert>
 
 namespace gfx {
 

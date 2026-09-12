@@ -6,6 +6,7 @@
 #include "../components/VelocityComponent.hpp"
 #include "../components/MeshComponent.hpp"
 #include "../components/CameraComponent.hpp"
+#include "../../gfx/AssetManager.hpp"
 #include "../../gui/gui.hpp"
 
 namespace ecs::InputSystem {
@@ -29,6 +30,7 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
   if (action == GLFW_PRESS)   ctx.keyboardKeys[key] = true;
   if (action == GLFW_RELEASE) ctx.keyboardKeys[key] = false;
 
+  // Pre-gui capture
   if (ctx.guiFocused) {
     if (key == GLFW_KEY_R) {
       if (action == GLFW_PRESS) {
@@ -43,6 +45,7 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
     return;
   }
 
+  // If gui is not capturing
   switch (key) {
     case GLFW_KEY_R:
       if (action == GLFW_PRESS) {
@@ -61,7 +64,21 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
         auto meshView = registry->view<MeshComponent>();
         for (auto entity : meshView) {
           auto& meshComponent = registry->get<MeshComponent>(entity);
-          meshComponent.mesh->polygonMode = meshComponent.mesh->polygonMode == gfx::Mesh::FILL ? gfx::Mesh::LINE : gfx::Mesh::FILL;
+          meshComponent.mesh->togglePolygonMode();
+        }
+      }
+      break;
+    case GLFW_KEY_2:
+      if (action == GLFW_PRESS) {
+        static gfx::Mesh* globalAxisPtr = registry->ctx().get<gfx::AssetManager>().getMesh("Axis");
+
+        auto meshView = registry->view<MeshComponent>();
+        for (auto entity : meshView) {
+          auto& meshComponent = registry->get<MeshComponent>(entity);
+          if (globalAxisPtr == meshComponent.mesh) {
+            meshComponent.disabled = !meshComponent.disabled;
+            break;
+          }
         }
       }
       break;

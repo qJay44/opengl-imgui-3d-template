@@ -5,7 +5,7 @@
 #include "../components/TransformComponent.hpp"
 #include "../components/TextureComponent.hpp"
 #include "../../core/EngineContext.hpp"
-#include "../../gfx/Render.hpp"
+#include "../../gfx/Renderer.hpp"
 #include "../../gfx/AssetManager.hpp"
 #include "TransformSystem.hpp"
 
@@ -50,6 +50,9 @@ void render(entt::registry& registry) {
     const auto& meshComponent = registry.get<MeshComponent>(entity);
     const auto& transComponent = registry.get<TransformComponent>(entity);
     const auto* textureComponentPtr = registry.try_get<TextureComponent>(entity);
+
+    if (meshComponent.disabled)
+      continue;
 
     gfx::Renderer::RenderCommand renderCmd{
       .shader = meshComponent.shader,

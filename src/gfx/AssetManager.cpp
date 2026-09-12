@@ -37,6 +37,21 @@ struct IndexEqual {
 
 } // namespace
 
+AssetManager::AssetManager() {
+  {
+    std::vector<vertex::P> vertices = {
+      {{0.f, 0.f, 0.f}}, {{1.f, 0.f, 0.f}},
+      {{0.f, 0.f, 0.f}}, {{0.f, 1.f, 0.f}},
+      {{0.f, 0.f, 0.f}}, {{0.f, 0.f, 1.f}},
+    };
+
+    MeshData data(vertices);
+    data.mode = GL_LINES;
+
+    meshes.emplace("Axis", std::make_unique<Mesh>(Mesh(data)));
+  }
+}
+
 void AssetManager::loadFromObj(fspath filepath, bool printInfo) {
   std::string filename = filepath.filename().string();
 

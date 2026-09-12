@@ -14,7 +14,7 @@
 #include "ecs/systems/TimeSystem.hpp"
 #include "entt/entity/fwd.hpp"
 #include "gfx/AssetManager.hpp"
-#include "gfx/Render.hpp"
+#include "gfx/Renderer.hpp"
 #include "gfx/Shader.hpp"
 #include "gfx/texture/Texture2D.hpp"
 #include "gui/gui.hpp"
@@ -65,7 +65,7 @@ int main() {
     gfx::Shader::setDirectoryLocation("res/shaders");
 
     gfx::Texture2D debugTex0(
-      gfx::image2D("res/tex/debug/uvChecker.jpg"),
+      gfx::image2D("res/tex/debug/uvChecker.jpg", true),
       {
         .minFilter = GL_NEAREST,
         .magFilter = GL_NEAREST,
@@ -76,6 +76,7 @@ int main() {
     gfx::AssetManager assetManager;
     assetManager.loadFromObj("res/obj/Cube.obj");
     assetManager.addShader("DefaultCube", gfx::Shader("PTNC.vert", "test.frag"));
+    assetManager.addShader("Axis", gfx::Shader("axis.vert", "axis.frag"));
     assetManager.addTexture("DebugTexture0", std::move(debugTex0));
     assetManager.addCamera("DefaultCamera", {});
     assetManager.addLight("GlobalLight", std::move(globalLight));
@@ -96,39 +97,54 @@ int main() {
 
   // ----- Entities ---------------------------------------------------------------------------------------------------------------- //
 
-  entt::entity entCube = registry.create();
   {
-    ecs::component::MeshComponent meshComponent{
-      .mesh = assetManager.getMesh("Cube.obj"),
-      .shader = assetManager.getShader("DefaultCube")
-    };
+    using namespace ecs::component;
 
-    ecs::component::TextureComponent textureComponent;
-    textureComponent.textures.push_back(assetManager.getTexture("DebugTexture0"));
+    entt::entity entCube = registry.create();
+    {
+      MeshComponent meshComponent{
+        .mesh = assetManager.getMesh("Cube.obj"),
+        .shader = assetManager.getShader("DefaultCube")
+      };
 
-    registry.emplace<ecs::component::MeshComponent>(entCube, meshComponent);
-    registry.emplace<ecs::component::TransformComponent>(entCube, ecs::component::TransformComponent{});
-    registry.emplace<ecs::component::TextureComponent>(entCube, textureComponent);
-  }
+      TextureComponent textureComponent;
+      textureComponent.textures.push_back(assetManager.getTexture("DebugTexture0"));
 
-  entt::entity entCamera = registry.create();
-  {
-    ecs::component::TransformComponent transComponent{
-      .pos = {0.f, 0.f, 25.f}
-    };
+      registry.emplace<MeshComponent>(entCube, meshComponent);
+      registry.emplace<TransformComponent>(entCube, TransformComponent{});
+      registry.emplace<TextureComponent>(entCube, textureComponent);
+    }
 
-    ecs::component::CameraComponent mainCamComponent{
-      .cam = assetManager.getCamera("DefaultCamera"),
-      .isActive = true
-    };
+    entt::entity entCamera = registry.create();
+    {
+      TransformComponent transComponent{
+        .pos = {0.f, 0.f, 25.f}
+      };
 
-    ecs::component::VelocityComponent velComponent{
-      .scale = 10.f
-    };
+      CameraComponent mainCamComponent{
+        .cam = assetManager.getCamera("DefaultCamera"),
+        .isActive = true
+      };
 
-    registry.emplace<ecs::component::CameraComponent>(entCamera, mainCamComponent);
-    registry.emplace<ecs::component::TransformComponent>(entCamera, transComponent);
-    registry.emplace<ecs::component::VelocityComponent>(entCamera, velComponent);
+      VelocityComponent velComponent{
+        .scale = 10.f
+      };
+
+      registry.emplace<CameraComponent>(entCamera, mainCamComponent);
+      registry.emplace<TransformComponent>(entCamera, transComponent);
+      registry.emplace<VelocityComponent>(entCamera, velComponent);
+    }
+
+    entt::entity entGlobalAxis = registry.create();
+    {
+      MeshComponent meshComponent{
+        .mesh = assetManager.getMesh("Axis"),
+        .shader = assetManager.getShader("Axis")
+      };
+
+      registry.emplace<MeshComponent>(entGlobalAxis, meshComponent);
+      registry.emplace<TransformComponent>(entGlobalAxis, TransformComponent{});
+    }
   }
 
   while (!glfwWindowShouldClose(window)) {
