@@ -1,7 +1,9 @@
 #include "ProfilerManager.hpp"
 #include "core/EngineContext.hpp"
 #include "core/Light.hpp"
+#include "ecs/components/AuxiliaryComponent.hpp"
 #include "ecs/components/CameraComponent.hpp"
+#include "ecs/components/InputComponent.hpp"
 #include "ecs/components/MeshComponent.hpp"
 #include "ecs/components/TransformComponent.hpp"
 #include "ecs/components/VelocityComponent.hpp"
@@ -93,7 +95,7 @@ int main() {
   auto& profiler = registry.ctx().get<ProfilerManager>();
 
   gui::init(window);
-  ecs::InputSystem::init(registry);
+  ecs::system::InputSystem::init(registry);
 
   // ----- Entities ---------------------------------------------------------------------------------------------------------------- //
 
@@ -110,64 +112,80 @@ int main() {
       TextureComponent textureComponent;
       textureComponent.textures.push_back(assetManager.getTexture("DebugTexture0"));
 
+      CameraComponent camComponent{
+        .cam = assetManager.getCamera("DefaultCamera"),
+      };
+
       registry.emplace<MeshComponent>(entCube, meshComponent);
       registry.emplace<TransformComponent>(entCube, TransformComponent{});
       registry.emplace<TextureComponent>(entCube, textureComponent);
+      registry.emplace<CameraComponent>(entCube, camComponent);
     }
 
     entt::entity entCamera = registry.create();
     {
-      TransformComponent transComponent{
-        .pos = {0.f, 0.f, 25.f}
-      };
-
-      CameraComponent mainCamComponent{
+      CameraComponent camComponent{
         .cam = assetManager.getCamera("DefaultCamera"),
-        .isActive = true
+        .isActive = true,
+        .isDetached = true,
       };
 
       VelocityComponent velComponent{
         .scale = 10.f
       };
 
-      registry.emplace<CameraComponent>(entCamera, mainCamComponent);
-      registry.emplace<TransformComponent>(entCamera, transComponent);
+      TransformComponent transComponent{
+        .pos = {0.f, 0.f, 25.f},
+      };
+
+      registry.emplace<CameraComponent>(entCamera, camComponent);
       registry.emplace<VelocityComponent>(entCamera, velComponent);
+      registry.emplace<InputComponent>(entCamera, InputComponent{});
+      registry.emplace<TransformComponent>(entCamera, transComponent);
     }
 
     entt::entity entGlobalAxis = registry.create();
     {
       MeshComponent meshComponent{
         .mesh = assetManager.getMesh("Axis"),
-        .shader = assetManager.getShader("Axis")
+        .shader = assetManager.getShader("Axis"),
+        .disabled = false
+      };
+
+      CameraComponent camComponent{
+        .cam = assetManager.getCamera("DefaultCamera"),
       };
 
       registry.emplace<MeshComponent>(entGlobalAxis, meshComponent);
       registry.emplace<TransformComponent>(entGlobalAxis, TransformComponent{});
+      registry.emplace<AuxiliaryComponent>(entGlobalAxis, AuxiliaryComponent{});
+      registry.emplace<CameraComponent>(entGlobalAxis, camComponent);
     }
   }
 
   while (!glfwWindowShouldClose(window)) {
+    using namespace ecs::system;
+
     // ----- Updates ----------------------------------------------------------------------------------------------------------------- //
 
     profiler.clearTasks();
     assetManager.checkShaders();
 
-    auto _taskUpdatesPass = profiler.startScopedTaskCpu("UpdatesPass");
+    auto taskUpdatesPass = profiler.startScopedTaskCpu("UpdatesPass");
 
     if (!ecs::TimeSystem::update(registry))
       continue;
 
-    ecs::InputSystem::update(registry);
-    ecs::MovementSystem::update(registry);
-    ecs::CameraSystem::update(registry);
+    InputSystem::update(registry);
+    MovementSystem::update(registry);
+    CameraSystem::update(registry);
 
     // ----- Render ------------------------------------------------------------------------------------------------------------------ //
 
-    ecs::RenderSystem::render(registry);
+    RenderSystem::render(registry);
     gui::render(registry);
 
-    _taskUpdatesPass.end();
+    taskUpdatesPass.end();
 
     // ----- Loop end ---------------------------------------------------------------------------------------------------------------- //
 

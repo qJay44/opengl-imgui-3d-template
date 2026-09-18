@@ -6,10 +6,11 @@
 #include "../components/VelocityComponent.hpp"
 #include "../components/MeshComponent.hpp"
 #include "../components/CameraComponent.hpp"
+#include "../components/InputComponent.hpp"
 #include "../../gfx/AssetManager.hpp"
 #include "../../gui/gui.hpp"
 
-namespace ecs::InputSystem {
+namespace ecs::system::InputSystem {
 
 using namespace ecs::component;
 
@@ -47,6 +48,9 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
 
   // If gui is not capturing
   switch (key) {
+    case GLFW_KEY_ESCAPE:
+      glfwSetWindowShouldClose(ctx.window, GLFW_TRUE);
+      break;
     case GLFW_KEY_R:
       if (action == GLFW_PRESS) {
         ctx.guiFocused = true;
@@ -70,7 +74,7 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
       break;
     case GLFW_KEY_2:
       if (action == GLFW_PRESS) {
-        static gfx::Mesh* globalAxisPtr = registry->ctx().get<gfx::AssetManager>().getMesh("Axis");
+        gfx::Mesh* globalAxisPtr = registry->ctx().get<gfx::AssetManager>().getMesh("Axis");
 
         auto meshView = registry->view<MeshComponent>();
         for (auto entity : meshView) {
@@ -119,31 +123,31 @@ void update(entt::registry& registry) {
   if (cursorMode == GLFW_CURSOR_DISABLED)
     glfwSetCursorPos(ctx.window, winCenter.x, winCenter.y);
 
-  if (ctx.keyboardKeys[GLFW_KEY_ESCAPE])
-    glfwSetWindowShouldClose(ctx.window, GLFW_TRUE);
-
   float forwardMask = ctx.keyboardKeys[GLFW_KEY_W];
   float leftMask    = ctx.keyboardKeys[GLFW_KEY_A];
   float backMask    = ctx.keyboardKeys[GLFW_KEY_S];
   float rightMask   = ctx.keyboardKeys[GLFW_KEY_D];
   float upMask      = ctx.keyboardKeys[GLFW_KEY_SPACE];
   float downMask    = ctx.keyboardKeys[GLFW_KEY_LEFT_CONTROL];
+  float shitfMask   = ctx.keyboardKeys[GLFW_KEY_LEFT_SHIFT];
 
-  auto velView = registry.view<CameraComponent, VelocityComponent>();
-  for (auto entity : velView) {
+  // TODO: Create and use OrientationComponent instead of CameraComponent?
+  for (auto entity : registry.view<CameraComponent, VelocityComponent, InputComponent>()) {
     const auto& camComponent = registry.get<CameraComponent>(entity);
     auto& velComponent = registry.get<VelocityComponent>(entity);
+    auto& inputComponent = registry.get<InputComponent>(entity);
 
     const vec3& orientation = camComponent.cam->orientation;
     const vec3& up = camComponent.cam->up;
     const vec3 right = glm::normalize(glm::cross(orientation, up));
+    float mult = inputComponent.shiftMultiplier * shitfMask + 1.f * (1.f - shitfMask);
 
-    velComponent.velocity +=  orientation * forwardMask;
-    velComponent.velocity += -right       * leftMask;
-    velComponent.velocity += -orientation * backMask;
-    velComponent.velocity +=  right       * rightMask;
-    velComponent.velocity +=  up          * upMask;
-    velComponent.velocity += -up          * downMask;
+    velComponent.velocity +=  orientation * mult * forwardMask;
+    velComponent.velocity += -right       * mult * leftMask;
+    velComponent.velocity += -orientation * mult * backMask;
+    velComponent.velocity +=  right       * mult * rightMask;
+    velComponent.velocity +=  up          * mult * upMask;
+    velComponent.velocity += -up          * mult * downMask;
   }
 }
 

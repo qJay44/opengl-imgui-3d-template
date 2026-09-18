@@ -20,6 +20,8 @@ using glm::dvec3;
 using glm::dvec4;
 
 using glm::mat4;
+using glm::mat3;
+using glm::mat2;
 
 
 // #include "glad/glad.h" // Windows version?

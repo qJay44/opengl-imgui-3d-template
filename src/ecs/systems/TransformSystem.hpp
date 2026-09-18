@@ -4,7 +4,7 @@
 #include "../components/TransformComponent.hpp"
 #include "glm/gtc/quaternion.hpp"
 
-namespace ecs::TransformSystem {
+namespace ecs::system::TransformSystem {
 
 inline mat4 getModel(const component::TransformComponent& trans) {
   mat4 t = glm::translate(mat4(1.f), trans.pos);

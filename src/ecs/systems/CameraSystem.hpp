@@ -1,11 +1,13 @@
 #pragma once
 
-#include "entt/entity/fwd.hpp"
+#include "../components/CameraComponent.hpp"
+#include "../../gfx/Shader.hpp"
 
-namespace ecs::CameraSystem {
+namespace ecs::system::CameraSystem {
 
 void onMouseMove(entt::registry& registry, dvec2 mousePos);
 void update(entt::registry& registry);
+void setUniforms(const ecs::component::CameraComponent& camComponent, gfx::Shader* shader);
 
 };
 

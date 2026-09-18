@@ -4,7 +4,7 @@
 #include "../components/TransformComponent.hpp"
 #include "../../core/EngineContext.hpp"
 
-namespace ecs::MovementSystem {
+namespace ecs::system::MovementSystem {
 
 using namespace ecs::component;
 

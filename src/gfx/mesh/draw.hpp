@@ -14,5 +14,13 @@ struct ElementsDraw {
   const void* indicesOffset;
 };
 
+struct ElementsInstancedDraw {
+  GLenum mode;
+  GLsizei indexCount;
+  GLenum indexType;
+  const void* indicesOffset;
+  GLsizei instanceCount;
+};
+
 } // namespace gfx
 

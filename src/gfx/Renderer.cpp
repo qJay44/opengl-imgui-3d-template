@@ -64,8 +64,6 @@ void Renderer::beginFrame(ivec2 viewPort) {
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
-void Renderer::setProjectionMat(const mat4& proj)       { renderProj  = proj; }
-void Renderer::setViewMat(const mat4& view)             { renderView  = view; }
 void Renderer::setGlobalLight(const core::Light* light) { globalLight = light; }
 
 void Renderer::submit(const RenderCommand&& cmd) {
@@ -81,15 +79,12 @@ void Renderer::endFrame(const core::EngineContext& ctx) {
 
   Shader* currBoundShader = nullptr;
   const Mesh* currBoundMesh = nullptr;
-  const core::Camera* currBoundCamera = nullptr;
   const Texture* currBoundTextures[MAX_TEXTURES]{};
 
   for (const auto& command : renderQueue) {
     if (command.shader != currBoundShader) {
       currBoundShader = command.shader;
       currBoundShader->use();
-      currBoundShader->setUniformMatrix4f("u_proj", renderProj);
-      currBoundShader->setUniformMatrix4f("u_view", renderView);
       currBoundShader->setUniform3f("u_lightColor", globalLight->color);
       currBoundShader->setUniform3f("u_lightDir", globalLight->direction);
       currBoundShader->setUniform1f("u_time", ctx.time);
@@ -105,16 +100,6 @@ void Renderer::endFrame(const core::EngineContext& ctx) {
       glEnable(GL_DEPTH_TEST); // Disable to ignore depth (draw one object over another one without discarding the farthest)
     }
 
-    if (command.cam != currBoundCamera) {
-      currBoundCamera = command.cam;
-      currBoundShader->setUniform1f("u_camNear", currBoundCamera->nearPlane);
-      currBoundShader->setUniform1f("u_camFar", currBoundCamera->farPlane);
-      currBoundShader->setUniform1f("u_camFov", currBoundCamera->fov);
-      currBoundShader->setUniform3f("u_camUp", currBoundCamera->up);
-      currBoundShader->setUniform3f("u_camForward", currBoundCamera->orientation);
-      currBoundShader->setUniform3f("u_camPos", command.camPos);
-    }
-
     for (size_t i = 0; i < command.textures.size() && i < MAX_TEXTURES; i++) {
       const Texture*& currTex = currBoundTextures[i];
       const Texture* cmdTex = command.textures[i];
@@ -125,14 +110,14 @@ void Renderer::endFrame(const core::EngineContext& ctx) {
       }
     }
 
-    currBoundShader->setUniformMatrix4f("u_model", command.model);
-
     std::visit([](auto&& arg) {
       using T = std::decay_t<decltype(arg)>;
       if constexpr (std::is_same_v<T, ArraysDraw>) {
         glDrawArrays(arg.mode, 0, arg.vertexCount);
       } else if constexpr (std::is_same_v<T, ElementsDraw>) {
         glDrawElements(arg.mode, arg.indexCount, arg.indexType, arg.indicesOffset);
+      } else if constexpr (std::is_same_v<T, ElementsInstancedDraw>) {
+        glDrawElementsInstanced(arg.mode, arg.indexCount, arg.indexType, arg.indicesOffset, arg.instanceCount);
       }
     }, currBoundMesh->drawCmd);
   }

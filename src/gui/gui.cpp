@@ -52,7 +52,7 @@ void render(entt::registry& registry) {
   ImGui_ImplGlfw_NewFrame();
   ImGui::NewFrame();
 
-  auto& ctx = registry.ctx().get<core::EngineContext>();
+  // auto& ctx = registry.ctx().get<core::EngineContext>();
   auto& assetManager = registry.ctx().get<gfx::AssetManager>();
   auto& profiler = registry.ctx().get<ProfilerManager>();
 
@@ -78,9 +78,7 @@ void render(entt::registry& registry) {
     core::Camera* cam{};
     vec3* camPos{};
     {
-      auto camView = registry.view<CameraComponent, TransformComponent>();
-
-      for (auto entity : camView) {
+      for (auto entity : registry.view<CameraComponent, TransformComponent>()) {
         auto& camComponent = registry.get<CameraComponent>(entity);
         if (camComponent.isActive) {
           auto& transComponent = registry.get<TransformComponent>(entity);
